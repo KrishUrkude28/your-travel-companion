@@ -1,39 +1,8 @@
 import { motion } from "framer-motion";
 import { Clock, Users, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const packages = [
-  {
-    title: "Golden Triangle Tour",
-    destinations: "Delhi → Agra → Jaipur",
-    duration: "5 Days / 4 Nights",
-    groupSize: "2-8 People",
-    price: "₹14,999",
-    originalPrice: "₹19,999",
-    highlights: ["Taj Mahal Visit", "Hawa Mahal", "Red Fort", "Local Cuisine"],
-    type: "Family",
-  },
-  {
-    title: "Bali Paradise Escape",
-    destinations: "Ubud → Seminyak → Nusa Dua",
-    duration: "7 Days / 6 Nights",
-    groupSize: "2-6 People",
-    price: "₹44,999",
-    originalPrice: "₹59,999",
-    highlights: ["Rice Terraces", "Temple Tours", "Beach Villas", "Spa & Wellness"],
-    type: "Honeymoon",
-  },
-  {
-    title: "Himalayan Adventure",
-    destinations: "Shimla → Manali → Rohtang",
-    duration: "6 Days / 5 Nights",
-    groupSize: "4-12 People",
-    price: "₹12,499",
-    originalPrice: "₹16,999",
-    highlights: ["Snow Activities", "River Rafting", "Camping", "Trekking"],
-    type: "Adventure",
-  },
-];
+import { Link } from "react-router-dom";
+import { packages } from "@/data/packages";
 
 const PackagesSection = () => {
   return (
@@ -69,8 +38,8 @@ const PackagesSection = () => {
                     {pkg.type}
                   </span>
                   <div className="text-right">
-                    <p className="text-muted-foreground text-xs line-through">{pkg.originalPrice}</p>
-                    <p className="text-foreground font-bold text-xl">{pkg.price}</p>
+                    <p className="text-muted-foreground text-xs line-through">₹{pkg.originalPrice.toLocaleString("en-IN")}</p>
+                    <p className="text-foreground font-bold text-xl">₹{pkg.price.toLocaleString("en-IN")}</p>
                   </div>
                 </div>
 
@@ -102,10 +71,12 @@ const PackagesSection = () => {
                   ))}
                 </div>
 
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 group-hover:shadow-glow transition-shadow">
-                  View Details
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                <Link to={`/package/${pkg.id}`}>
+                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 group-hover:shadow-glow transition-shadow">
+                    View Details
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           ))}

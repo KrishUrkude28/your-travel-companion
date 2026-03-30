@@ -71,10 +71,12 @@ const PackagesSection = () => {
                   ))}
                 </div>
 
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 group-hover:shadow-glow transition-shadow">
-                  View Details
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+                <Link to={`/package/${pkg.id}`}>
+                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 group-hover:shadow-glow transition-shadow">
+                    View Details
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           ))}

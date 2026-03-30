@@ -38,8 +38,8 @@ const PackagesSection = () => {
                     {pkg.type}
                   </span>
                   <div className="text-right">
-                    <p className="text-muted-foreground text-xs line-through">{pkg.originalPrice}</p>
-                    <p className="text-foreground font-bold text-xl">{pkg.price}</p>
+                    <p className="text-muted-foreground text-xs line-through">₹{pkg.originalPrice.toLocaleString("en-IN")}</p>
+                    <p className="text-foreground font-bold text-xl">₹{pkg.price.toLocaleString("en-IN")}</p>
                   </div>
                 </div>
 

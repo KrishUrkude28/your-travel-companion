@@ -26,6 +26,7 @@ export interface TravelPackage {
   itinerary: PackageItinerary[];
   costBreakdown: CostItem[];
   heroImage: string;
+  galleryImages: string[];
 }
 
 export const packages: TravelPackage[] = [

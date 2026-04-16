@@ -26,6 +26,7 @@ export interface TravelPackage {
   itinerary: PackageItinerary[];
   costBreakdown: CostItem[];
   heroImage: string;
+  galleryImages: string[];
 }
 
 export const packages: TravelPackage[] = [
@@ -70,6 +71,16 @@ export const packages: TravelPackage[] = [
       { label: "Taxes & service charge", amount: 499 },
     ],
     heroImage: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80",
+      "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80",
+      "https://images.unsplash.com/photo-1585135497273-1a86b09fe70e?w=800&q=80",
+      "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&q=80",
+      "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&q=80",
+      "https://images.unsplash.com/photo-1598091383021-15ddea10925d?w=800&q=80",
+      "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&q=80",
+      "https://images.unsplash.com/photo-1515091943-9d5c0ad475af?w=800&q=80",
+    ],
   },
   {
     id: "bali-paradise",
@@ -115,6 +126,16 @@ export const packages: TravelPackage[] = [
       { label: "Taxes & service charge", amount: 1499 },
     ],
     heroImage: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800&q=80",
+      "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=800&q=80",
+      "https://images.unsplash.com/photo-1573790387438-4da905039392?w=800&q=80",
+      "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=800&q=80",
+      "https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?w=800&q=80",
+      "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?w=800&q=80",
+      "https://images.unsplash.com/photo-1501179691627-eeaa65ea017c?w=800&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+    ],
   },
   {
     id: "himalayan-adventure",
@@ -158,5 +179,15 @@ export const packages: TravelPackage[] = [
       { label: "Taxes & service charge", amount: 499 },
     ],
     heroImage: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1200&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1585409677983-0f6c41128c1b?w=800&q=80",
+      "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800&q=80",
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
+      "https://images.unsplash.com/photo-1486911278844-a81c5267e227?w=800&q=80",
+      "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=800&q=80",
+      "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80",
+      "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800&q=80",
+    ],
   },
 ];

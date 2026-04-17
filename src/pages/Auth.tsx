@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 
@@ -57,15 +57,16 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      }
     });
-    if (result.error) {
+    if (error) {
       toast({ title: "Error", description: "Failed to sign in with Google", variant: "destructive" });
       return;
     }
-    if (result.redirected) return;
-    navigate("/");
   };
 
   return (

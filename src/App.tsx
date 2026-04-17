@@ -12,6 +12,13 @@ import TripPlanner from "./pages/TripPlanner.tsx";
 import Profile from "./pages/Profile.tsx";
 import Wishlist from "./pages/Wishlist.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Guides from "./pages/Guides.tsx";
+import GuideDetail from "./pages/GuideDetail.tsx";
+import Payment from "./pages/Payment.tsx";
+import Flights from "./pages/Flights.tsx";
+import Hotels from "./pages/Hotels.tsx";
+import Trains from "./pages/Trains.tsx";
+import Buses from "./pages/Buses.tsx";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +37,13 @@ const App = () => (
             <Route path="/trip-planner" element={<TripPlanner />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/guides" element={<Guides />} />
+            <Route path="/guides/:id" element={<GuideDetail />} />
+            <Route path="/payment/:booking_id" element={<Payment />} />
+            <Route path="/flights" element={<Flights />} />
+            <Route path="/hotels" element={<Hotels />} />
+            <Route path="/trains" element={<Trains />} />
+            <Route path="/buses" element={<Buses />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

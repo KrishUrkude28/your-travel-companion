@@ -100,21 +100,51 @@ const TripPlanner = () => {
     setPlan(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("generate-itinerary", {
-        body: {
-          destination: form.destination,
-          duration: form.duration,
-          budget: form.budget,
-          travelers: Number(form.travelers),
-          interests: form.interests,
-          requirements: form.requirements,
-        },
+      const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!GEMINI_KEY) {
+        throw new Error("Please add VITE_GEMINI_API_KEY to your .env file!");
+      }
+
+      const prompt = `You are TravelSathi's expert travel planner. Create a detailed travel itinerary.
+Destination: ${form.destination}
+Duration: ${form.duration}  |  Budget: ${form.budget}  |  Travelers: ${form.travelers}
+Interests: ${form.interests?.length > 0 ? form.interests.join(", ") : "General sightseeing"}
+Special Requirements: ${form.requirements || "None"}
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "title": "Trip Title",
+  "summary": "Brief 1-2 sentence overview of the trip",
+  "duration": "${form.duration}",
+  "estimatedBudget": "${form.budget}",
+  "itinerary": [
+    {
+      "day": 1,
+      "title": "Day 1 Theme/Title",
+      "description": "Detailed description of the day's events",
+      "meals": ["Breakfast spot", "Lunch spot", "Dinner spot"],
+      "activities": ["Activity 1", "Activity 2"],
+      "accommodation": "Hotel/resort name"
+    }
+  ],
+  "tips": ["Tip 1", "Tip 2", "Tip 3"]
+}`;
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const geminiData = await res.json();
+      if (geminiData.error) throw new Error(geminiData.error.message);
 
-      setPlan(data.plan);
+      const text = geminiData.candidates[0].content.parts[0].text;
+      const cleanJsonText = text.replace(/```json|```/g, "").trim();
+      const generatedPlan = JSON.parse(cleanJsonText);
+      setPlan(generatedPlan);
 
       // Save to DB
       await supabase.from("trip_plans").insert({
@@ -125,7 +155,7 @@ const TripPlanner = () => {
         travelers: Number(form.travelers),
         interests: form.interests,
         requirements: form.requirements,
-        generated_itinerary: data.plan,
+        generated_itinerary: generatedPlan,
       });
     } catch (err: any) {
       toast({ title: "Generation failed", description: err.message || "Please try again.", variant: "destructive" });

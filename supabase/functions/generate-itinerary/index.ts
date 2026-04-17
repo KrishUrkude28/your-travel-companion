@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform",
 };
 
 serve(async (req) => {
@@ -18,117 +18,49 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_KEY) throw new Error("GEMINI_API_KEY is not configured in Supabase Secrets");
 
-    const systemPrompt = `You are a professional travel planner. Generate detailed, realistic travel itineraries in JSON format.
-Your response MUST be a valid JSON object with this exact structure:
+    const prompt = `You are TravelSathi's expert travel planner. Create a detailed travel itinerary.
+Destination: ${destination}
+Duration: ${duration}  |  Budget: ${budget}  |  Travelers: ${travelers}
+Interests: ${interests?.length > 0 ? interests.join(", ") : "General sightseeing"}
+Special Requirements: ${requirements || "None"}
+
+Return ONLY a valid JSON object with this exact structure:
 {
-  "title": "Trip title",
-  "summary": "Brief 1-2 sentence overview",
-  "duration": "X Days / Y Nights",
-  "estimatedBudget": "₹XX,XXX - ₹XX,XXX per person",
+  "title": "Trip Title",
+  "summary": "Brief 1-2 sentence overview of the trip",
+  "duration": "${duration}",
+  "estimatedBudget": "${budget}",
   "itinerary": [
     {
       "day": 1,
-      "title": "Day title",
-      "description": "Detailed description of the day",
-      "meals": ["Breakfast", "Lunch", "Dinner"],
+      "title": "Day 1 Theme/Title",
+      "description": "Detailed description of the day's events",
+      "meals": ["Breakfast spot", "Lunch spot", "Dinner spot"],
       "activities": ["Activity 1", "Activity 2"],
-      "accommodation": "Hotel/resort name or type"
+      "accommodation": "Hotel/resort name"
     }
   ],
-  "tips": ["Tip 1", "Tip 2"]
+  "tips": ["Tip 1", "Tip 2", "Tip 3"]
 }
-Include practical details: real place names, realistic timings, local cuisine recommendations, and transportation between locations.`;
+`;
 
-    const userPrompt = `Create a travel itinerary for:
-- Destination: ${destination}
-- Duration: ${duration}
-- Budget: ${budget}
-- Number of travelers: ${travelers}
-- Interests: ${interests?.length > 0 ? interests.join(", ") : "General sightseeing"}
-- Special requirements: ${requirements || "None"}
-
-Make it detailed, practical, and personalized to the interests provided.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "generate_itinerary",
-              description: "Generate a structured travel itinerary",
-              parameters: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  summary: { type: "string" },
-                  duration: { type: "string" },
-                  estimatedBudget: { type: "string" },
-                  itinerary: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        day: { type: "number" },
-                        title: { type: "string" },
-                        description: { type: "string" },
-                        meals: { type: "array", items: { type: "string" } },
-                        activities: { type: "array", items: { type: "string" } },
-                        accommodation: { type: "string" },
-                      },
-                      required: ["day", "title", "description", "meals", "activities", "accommodation"],
-                    },
-                  },
-                  tips: { type: "array", items: { type: "string" } },
-                },
-                required: ["title", "summary", "duration", "estimatedBudget", "itinerary", "tips"],
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "generate_itinerary" } },
+        contents: [{ parts: [{ text: prompt }] }],
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "AI is busy, please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("Failed to generate itinerary");
-    }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
 
-    const aiData = await response.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-
-    if (!toolCall) {
-      throw new Error("No structured output from AI");
-    }
-
-    const plan = JSON.parse(toolCall.function.arguments);
+    const text = data.candidates[0].content.parts[0].text;
+    const cleanJsonText = text.replace(/```json|```/g, "").trim();
+    const plan = JSON.parse(cleanJsonText);
 
     return new Response(JSON.stringify({ plan }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

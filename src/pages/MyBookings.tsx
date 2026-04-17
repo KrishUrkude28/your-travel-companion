@@ -134,7 +134,16 @@ const MyBookings = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Link to={`/package/${booking.package_id}`} className="flex-1">
+                  <Link 
+                    to={
+                      booking.package_id.startsWith("mock-") 
+                        ? (booking.package_id === "mock-bus" ? "/buses" 
+                         : booking.package_id === "mock-guide" ? "/guides"
+                         : `/${booking.package_id.split("-")[1]}s`) 
+                        : `/package/${booking.package_id}`
+                    } 
+                    className="flex-1"
+                  >
                     <Button variant="outline" size="sm" className="w-full">View</Button>
                   </Link>
                   {booking.status === "pending" && (

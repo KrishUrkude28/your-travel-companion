@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog } from "lucide-react";
+import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -14,13 +14,18 @@ import {
 
 const navLinks = [
   { label: "Destinations", href: "/#destinations" },
-  { label: "Packages", href: "/#packages" },
+  { label: "Flights", href: "/flights" },
+  { label: "Hotels", href: "/hotels" },
+  { label: "Trains", href: "/trains" },
+  { label: "Buses", href: "/buses" },
+  { label: "Guides", href: "/guides" },
   { label: "AI Planner", href: "/trip-planner" },
   { label: "Contact", href: "/#contact" },
 ];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
   const { user, signOut } = useAuth();
   const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
@@ -35,6 +40,11 @@ const Navbar = () => {
     } else {
       navigate(href);
     }
+  };
+
+  const toggleDarkMode = () => {
+    setIsDark(!isDark);
+    document.documentElement.classList.toggle('dark');
   };
 
   return (
@@ -66,6 +76,13 @@ const Navbar = () => {
 
           {user ? (
             <div className="flex items-center gap-2">
+              <button
+                onClick={toggleDarkMode}
+                aria-label="Toggle Dark Mode"
+                className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+              >
+                {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
+              </button>
               <button
                 onClick={() => navigate("/wishlist")}
                 aria-label="Wishlist"
@@ -111,8 +128,20 @@ const Navbar = () => {
               </Button>
             </Link>
           )}
+          {!user && (
+             <button
+                onClick={toggleDarkMode}
+                aria-label="Toggle Dark Mode"
+                className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors ml-2"
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+             </button>
+          )}
         </div>
 
+        <button className="md:hidden text-foreground ml-auto mr-2" onClick={toggleDarkMode}>
+          {isDark ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+        </button>
         <button className="md:hidden text-foreground" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>

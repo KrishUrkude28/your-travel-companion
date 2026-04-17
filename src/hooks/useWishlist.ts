@@ -37,8 +37,8 @@ export const useWishlist = () => {
   // Realtime updates so the badge & lists react across tabs/components
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`wishlist-${user.id}`)
+    const channel = supabase.channel(`wishlist-${user.id}-${Math.random().toString(36).slice(2)}`);
+    channel
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "wishlists", filter: `user_id=eq.${user.id}` },

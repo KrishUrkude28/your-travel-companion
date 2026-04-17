@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
 
   const handleNavClick = (href: string) => {
@@ -63,28 +65,45 @@ const Navbar = () => {
           ))}
 
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <User className="h-4 w-4" />
-                  <span className="max-w-[100px] truncate">{user.user_metadata?.full_name || user.email?.split("@")[0]}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <UserCog className="h-4 w-4 mr-2" /> Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
-                  <BookOpen className="h-4 w-4 mr-2" /> My Bookings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/wishlist")}>
-                  <Heart className="h-4 w-4 mr-2" /> Wishlist
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="h-4 w-4 mr-2" /> Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/wishlist")}
+                aria-label="Wishlist"
+                className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+              >
+                <Heart className="h-4 w-4 text-foreground" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="max-w-[100px] truncate">{user.user_metadata?.full_name || user.email?.split("@")[0]}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <UserCog className="h-4 w-4 mr-2" /> Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
+                    <BookOpen className="h-4 w-4 mr-2" /> My Bookings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/wishlist")}>
+                    <Heart className="h-4 w-4 mr-2" /> Wishlist
+                    {wishlistCount > 0 && (
+                      <span className="ml-auto text-xs font-semibold text-accent">{wishlistCount}</span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="h-4 w-4 mr-2" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <Link to="/auth">
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">

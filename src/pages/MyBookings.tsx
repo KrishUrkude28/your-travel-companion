@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Users, MapPin, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +27,7 @@ const MyBookings = () => {
   const { user, loading: authLoading } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,6 +53,21 @@ const MyBookings = () => {
     };
     fetchBookings();
   }, [user, toast]);
+
+  const handleCancel = async (id: string) => {
+    setCancellingId(id);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", id);
+    setCancellingId(null);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status: "cancelled" } : b));
+    toast({ title: "Booking cancelled", description: "Your booking has been cancelled." });
+  };
 
   if (authLoading || loading) {
     return (
@@ -86,11 +107,11 @@ const MyBookings = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card rounded-2xl p-6 shadow-card"
+                className="bg-card rounded-2xl p-6 shadow-card flex flex-col"
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-display font-bold text-foreground">{booking.package_title}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
                     booking.status === "confirmed" ? "bg-green-100 text-green-700" :
                     booking.status === "cancelled" ? "bg-red-100 text-red-700" :
                     "bg-accent/20 text-accent-foreground"
@@ -98,7 +119,7 @@ const MyBookings = () => {
                     {booking.status}
                   </span>
                 </div>
-                <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="space-y-2 text-sm text-muted-foreground flex-1">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     <span>{new Date(booking.travel_date).toLocaleDateString("en-IN", { dateStyle: "long" })}</span>
@@ -112,9 +133,43 @@ const MyBookings = () => {
                     <span>Booked {new Date(booking.created_at).toLocaleDateString("en-IN")}</span>
                   </div>
                 </div>
-                <Link to={`/package/${booking.package_id}`}>
-                  <Button variant="outline" size="sm" className="w-full mt-4">View Package</Button>
-                </Link>
+                <div className="flex gap-2 mt-4">
+                  <Link to={`/package/${booking.package_id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">View</Button>
+                  </Link>
+                  {booking.status === "pending" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                          disabled={cancellingId === booking.id}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Your booking for <strong>{booking.package_title}</strong> on{" "}
+                            {new Date(booking.travel_date).toLocaleDateString("en-IN", { dateStyle: "long" })} will be cancelled. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Keep booking</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleCancel(booking.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Yes, cancel
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>

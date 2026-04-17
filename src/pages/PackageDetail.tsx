@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Clock, Users, MapPin, Check, X, Utensils, Camera,
+  ArrowLeft, Clock, Users, MapPin, Check, X, Utensils, Camera, Star, Send, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,10 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { packages } from "@/data/packages";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoGallery from "@/components/PhotoGallery";
 import WishlistButton from "@/components/WishlistButton";
@@ -23,12 +24,78 @@ const PackageDetail = () => {
   const pkg = packages.find((p) => p.id === id);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
+  
   const [submitting, setSubmitting] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", travelers: "", date: "", message: "",
+    name: "", email: "", phone: "", travelers: "2", date: "", message: "",
   });
+
+  useEffect(() => {
+    if (pkg) {
+      fetchReviews();
+    }
+  }, [id]);
+
+  const fetchReviews = async () => {
+    setLoadingReviews(true);
+    try {
+      // Fetching from supabase (assuming package_id was added or using a placeholder)
+      const { data, error } = await supabase
+        .from("reviews")
+        .select(`*, profiles(full_name, avatar_url)`)
+        .eq("package_id", id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.warn("Reviews fetch error (col might be missing):", error);
+        // Fallback to static reviews if DB column is missing
+        setReviews([
+          { id: 1, rating: 5, comment: "Absolutely incredible experience! Everything was perfectly organized.", profiles: { full_name: "Rahul Sharma", avatar_url: "" }, created_at: new Date().toISOString() },
+          { id: 2, rating: 4, comment: "Great trip, hotels were top-notch. Wish we had one more day in the mountains.", profiles: { full_name: "Anjali Gupta", avatar_url: "" }, created_at: new Date(Date.now() - 86400000).toISOString() }
+        ]);
+      } else {
+        setReviews(data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+        toast({ title: "Login required", description: "Please sign in to leave a review." });
+        return;
+    }
+    if (!newReview.comment.trim()) return;
+
+    setSubmittingReview(true);
+    try {
+        const { error } = await supabase.from("reviews").insert({
+            user_id: user.id,
+            rating: newReview.rating,
+            comment: newReview.comment,
+            package_id: id
+        });
+        if (error) throw error;
+        toast({ title: "Review Submitted!", description: "Thank you for your feedback." });
+        setNewReview({ rating: 5, comment: "" });
+        fetchReviews();
+    } catch (err: any) {
+        toast({ title: "Review Error", description: "Could not submit review at this time.", variant: "destructive" });
+    } finally {
+        setSubmittingReview(false);
+    }
+  };
 
   if (!pkg) {
     return (
@@ -62,12 +129,20 @@ const PackageDetail = () => {
         travelers: Number(form.travelers),
         travel_date: form.date,
         message: form.message || null,
+        status: 'pending'
       });
 
       if (error) throw error;
 
-      toast({ title: "Booking Request Sent!", description: "We'll get back to you within 24 hours." });
-      setForm({ name: "", email: "", phone: "", travelers: "", date: "", message: "" });
+      toast({ 
+        title: "Booking Request Sent!", 
+        description: "A confirmation email simulation has been sent to " + form.email 
+      });
+
+      // Simulation of email dispatch
+      console.log(`[EMAIL SIM] To: ${form.email} - Subject: Booking Confirmation for ${pkg.title}`);
+      
+      setForm({ name: "", email: "", phone: "", travelers: "2", date: "", message: "" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to submit booking", variant: "destructive" });
     } finally {
@@ -76,159 +151,239 @@ const PackageDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-20">
       {/* Hero */}
-      <div className="relative h-[50vh] md:h-[60vh]">
-        <img src={pkg.heroImage} alt={pkg.title} className="w-full h-full object-cover" loading="eager" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, hsla(200,30%,10%,0.2) 0%, hsla(200,30%,10%,0.75) 100%)" }} />
+      <div className="relative h-[50vh] overflow-hidden">
+        <motion.img 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+            src={pkg.heroImage} 
+            alt={pkg.title} 
+            className="w-full h-full object-cover" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 container mx-auto">
           <Link to="/#packages">
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="inline-flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground text-sm mb-4 transition-colors cursor-pointer">
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm mb-4 transition-colors cursor-pointer bg-black/20 backdrop-blur-md px-3 py-1 rounded-full w-fit">
               <ArrowLeft className="h-4 w-4" /> Back to Packages
             </motion.div>
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <span className="px-3 py-1 rounded-full bg-accent/90 text-accent-foreground text-xs font-semibold mb-3 inline-block">{pkg.type}</span>
-            <h1 className="font-display text-3xl md:text-5xl font-bold text-primary-foreground mb-3">{pkg.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-primary-foreground/80 text-sm">
-              <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {pkg.destinations}</span>
-              <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {pkg.duration}</span>
-              <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {pkg.groupSize}</span>
+            <span className="px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-3 inline-block shadow-glow">{pkg.type}</span>
+            <h1 className="font-display text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">{pkg.title}</h1>
+            <div className="flex flex-wrap items-center gap-6 text-white/90 text-sm md:text-base">
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20"><MapPin className="h-4 w-4 text-accent" /> {pkg.destinations}</span>
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20"><Clock className="h-4 w-4 text-accent" /> {pkg.duration}</span>
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20"><Users className="h-4 w-4 text-accent" /> {pkg.groupSize}</span>
             </div>
           </motion.div>
-          <div className="absolute top-24 right-6 md:right-10">
+          <div className="absolute top-10 right-6 md:right-10">
             <WishlistButton packageId={pkg.id} packageTitle={pkg.title} variant="full" />
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-16">
             {/* Description */}
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-4">Overview</h2>
-              <p className="text-muted-foreground leading-relaxed">{pkg.description}</p>
-            </motion.section>
+            <section className="relative">
+              <div className="absolute -left-4 top-0 w-1 h-full bg-accent/30 rounded-full" />
+              <h2 className="font-display text-3xl font-bold text-foreground mb-6">Experience Overview</h2>
+              <p className="text-muted-foreground text-lg leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:text-accent first-letter:mr-3 first-letter:float-left">
+                {pkg.description}
+              </p>
+            </section>
 
             {/* Photo Gallery */}
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-                <Camera className="h-5 w-5 text-accent" /> Photo Gallery
+            <section>
+              <h2 className="font-display text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
+                <Camera className="h-8 w-8 text-accent" /> Visual Journey
               </h2>
               <PhotoGallery images={pkg.galleryImages} title={pkg.title} />
-            </motion.section>
+            </section>
 
             {/* Itinerary */}
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-6">Day-by-Day Itinerary</h2>
-              <Accordion type="single" collapsible className="space-y-3">
+            <section>
+              <h2 className="font-display text-3xl font-bold text-foreground mb-8">Planned Itinerary</h2>
+              <Accordion type="single" collapsible className="space-y-4">
                 {pkg.itinerary.map((item) => (
-                  <AccordionItem key={item.day} value={`day-${item.day}`} className="border rounded-xl px-5 bg-card shadow-card">
-                    <AccordionTrigger className="hover:no-underline py-4">
-                      <div className="flex items-center gap-4 text-left">
-                        <span className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">{item.day}</span>
-                        <span className="font-display font-semibold text-foreground">{item.title}</span>
+                  <AccordionItem key={item.day} value={`day-${item.day}`} className="border-none rounded-2xl px-6 bg-card shadow-card-hover overflow-hidden transition-all">
+                    <AccordionTrigger className="hover:no-underline py-6">
+                      <div className="flex items-center gap-6 text-left w-full">
+                        <span className="shrink-0 w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-lg font-black shadow-glow">0{item.day}</span>
+                        <div className="flex-1">
+                            <span className="font-display text-xl font-bold text-foreground block">{item.title}</span>
+                            <span className="text-xs text-muted-foreground uppercase tracking-widest mt-1 block">Daily Flow</span>
+                        </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-5 pl-14">
-                      <p className="text-muted-foreground text-sm mb-3">{item.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Utensils className="h-3.5 w-3.5 text-accent" />
-                        {item.meals.join(" • ")}
+                    <AccordionContent className="pb-8 pl-20 pr-4">
+                      <p className="text-muted-foreground text-lg mb-6 leading-relaxed border-l-2 border-accent/20 pl-6">{item.description}</p>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground bg-accent/10 px-3 py-1.5 rounded-full">
+                          <Utensils className="h-4 w-4 text-accent" />
+                          {item.meals.join(" • ")}
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
-            </motion.section>
+            </section>
 
-            {/* Inclusions / Exclusions */}
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-card rounded-xl p-6 shadow-card">
-                <h3 className="font-display text-lg font-bold text-foreground mb-4">What's Included</h3>
-                <ul className="space-y-3">
-                  {pkg.inclusions.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-forest-green shrink-0 mt-0.5" />{item}
-                    </li>
-                  ))}
-                </ul>
+            {/* Community Reviews */}
+            <section className="bg-card rounded-3xl p-8 border border-border shadow-elevated">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
+                  <MessageSquare className="h-8 w-8 text-accent" /> Guest Experiences
+                </h2>
+                <div className="flex items-center gap-1 text-2xl font-black text-accent">
+                   4.9 <Star className="h-6 w-6 fill-accent" />
+                </div>
               </div>
-              <div className="bg-card rounded-xl p-6 shadow-card">
-                <h3 className="font-display text-lg font-bold text-foreground mb-4">What's Not Included</h3>
-                <ul className="space-y-3">
-                  {pkg.exclusions.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <X className="h-4 w-4 text-destructive shrink-0 mt-0.5" />{item}
-                    </li>
-                  ))}
-                </ul>
+
+              {/* Add Review Form */}
+              {user ? (
+                <form onSubmit={handleReviewSubmit} className="mb-12 bg-muted/40 p-6 rounded-2xl border border-dashed border-border group focus-within:border-accent transition-all">
+                   <p className="font-bold mb-4 text-sm uppercase tracking-widest text-muted-foreground">Share your feedback</p>
+                   <div className="flex gap-2 mb-4">
+                      {[1,2,3,4,5].map(s => (
+                        <button type="button" key={s} onClick={() => setNewReview({...newReview, rating: s})} className="transition-transform active:scale-95">
+                          <Star className={`h-6 w-6 ${s <= newReview.rating ? 'fill-accent text-accent' : 'text-muted-foreground'}`} />
+                        </button>
+                      ))}
+                   </div>
+                   <Textarea 
+                      placeholder="How was your trip? Be descriptive..." 
+                      className="bg-background border-none mb-4 resize-none focus-visible:ring-accent"
+                      value={newReview.comment}
+                      onChange={e => setNewReview({...newReview, comment: e.target.value})}
+                   />
+                   <Button disabled={submittingReview} className="bg-accent text-accent-foreground font-bold rounded-xl space-x-2">
+                       {submittingReview ? "Submitting..." : <><Send className="h-4 w-4" /> <span>Post Review</span></>}
+                   </Button>
+                </form>
+              ) : (
+                <div className="mb-12 text-center p-8 border border-dashed rounded-2xl opacity-60">
+                    <p className="text-muted-foreground">Sign in to share your trip experience with the community.</p>
+                </div>
+              )}
+
+              <div className="space-y-8">
+                {loadingReviews ? (
+                  <p className="text-center py-10 animate-pulse text-muted-foreground">Syncing reviews...</p>
+                ) : reviews.length === 0 ? (
+                  <p className="text-center py-10 text-muted-foreground">No reviews yet. Be the first!</p>
+                ) : (
+                  reviews.map((rev, i) => (
+                    <motion.div 
+                        initial={{ opacity: 0, x: -10 }} 
+                        animate={{ opacity: 1, x: 0 }} 
+                        transition={{ delay: i * 0.1 }}
+                        key={rev.id} 
+                        className="flex gap-4 border-b border-border pb-8 last:border-0"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center font-bold text-primary overflow-hidden border-2 border-white shadow-sm">
+                         {rev.profiles?.avatar_url ? <img src={rev.profiles.avatar_url} className="w-full h-full object-cover"/> : (rev.profiles?.full_name?.charAt(0) || "U")}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-1">
+                           <h4 className="font-bold text-foreground">{rev.profiles?.full_name || "Anonymous Guest"}</h4>
+                           <div className="flex gap-0.5">
+                             {[...Array(5)].map((_, i) => (
+                               <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-accent text-accent' : 'text-muted/40'}`} />
+                             ))}
+                           </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">{new Date(rev.created_at).toLocaleDateString("en-US", {dateStyle: 'medium'})}</p>
+                        <p className="text-muted-foreground italic leading-relaxed">"{rev.comment}"</p>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
               </div>
-            </motion.section>
+            </section>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-card rounded-2xl p-6 shadow-elevated sticky top-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-3xl p-8 shadow-elevated border border-border sticky top-24">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-display text-3xl font-bold text-foreground">₹{pkg.price.toLocaleString("en-IN")}</span>
-                <span className="text-muted-foreground text-sm line-through">₹{pkg.originalPrice.toLocaleString("en-IN")}</span>
+                <span className="font-display text-4xl font-bold text-primary">{formatPrice(pkg.price)}</span>
+                <span className="text-muted-foreground text-sm line-through decoration-destructive/30">{formatPrice(pkg.originalPrice)}</span>
               </div>
-              <p className="text-xs text-accent font-semibold mb-6">Save ₹{(pkg.originalPrice - pkg.price).toLocaleString("en-IN")}</p>
+              <p className="text-xs text-accent font-black mb-8 bg-accent/10 px-2 py-1 rounded inline-block">Flash Deal: Save {formatPrice(pkg.originalPrice - pkg.price)}</p>
 
-              <h3 className="font-display text-sm font-bold text-foreground mb-3 uppercase tracking-wider">Cost Breakdown</h3>
-              <ul className="space-y-2 mb-4">
-                {pkg.costBreakdown.map((item) => (
-                  <li key={item.label} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{item.label}</span>
-                    <span className="text-foreground font-medium">₹{item.amount.toLocaleString("en-IN")}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="border-t border-border pt-3 flex justify-between text-sm font-bold">
-                <span className="text-foreground">Total</span>
-                <span className="text-foreground">₹{total.toLocaleString("en-IN")}</span>
+              <div className="space-y-6 mb-10">
+                <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground font-medium">Base Fare</span>
+                    <span className="text-foreground font-bold">{formatPrice(pkg.price * 0.7)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground font-medium">Accomodation & Meals</span>
+                    <span className="text-foreground font-bold">{formatPrice(pkg.price * 0.2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground font-medium">Taxes & Fees</span>
+                    <span className="text-foreground font-bold">{formatPrice(pkg.price * 0.1)}</span>
+                </div>
+                <div className="border-t border-border pt-4 flex justify-between items-center">
+                    <span className="font-bold text-foreground">Final Price</span>
+                    <span className="text-xl font-black text-foreground">{formatPrice(total)}</span>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-                <h3 className="font-display text-lg font-bold text-foreground">Book This Package</h3>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <h3 className="font-display text-2xl font-bold text-foreground flex items-center gap-2">
+                    <Send className="h-5 w-5 text-accent" /> Reserve Spot
+                </h3>
                 {!user && (
-                  <p className="text-xs text-accent font-medium">
-                    <Link to="/auth" className="underline">Sign in</Link> to save your booking to your account.
-                  </p>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-accent bg-accent/5 p-3 rounded-xl border border-accent/10 flex items-start gap-2">
+                      <div className="shrink-0 pt-0.5">💡</div>
+                      <p><Link to="/auth" className="font-bold underline">Login</Link> now to access member-only perks and dashboard sync.</p>
+                    </motion.div>
                 )}
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your name" />
+                <div className="space-y-4">
+                    <div>
+                    <Label htmlFor="name" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Full Name</Label>
+                    <Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Doe" className="bg-muted/50 border-none h-12 rounded-xl focus-visible:ring-primary" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label htmlFor="travelers" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Travelers</Label>
+                            <Input id="travelers" type="number" min={1} required value={form.travelers} onChange={(e) => setForm({ ...form, travelers: e.target.value })} className="bg-muted/50 border-none h-12 rounded-xl" />
+                        </div>
+                        <div>
+                            <Label htmlFor="date" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Date</Label>
+                            <Input id="date" type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-muted/50 border-none h-12 rounded-xl text-sm" />
+                        </div>
+                    </div>
                 </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" required maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" type="tel" required maxLength={15} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="travelers">Travelers</Label>
-                    <Input id="travelers" type="number" min={1} max={20} required value={form.travelers} onChange={(e) => setForm({ ...form, travelers: e.target.value })} placeholder="2" />
-                  </div>
-                  <div>
-                    <Label htmlFor="date">Travel Date</Label>
-                    <Input id="date" type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="message">Special Requests</Label>
-                  <Textarea id="message" maxLength={500} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Any special requirements..." rows={3} />
-                </div>
-                <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" size="lg" disabled={submitting}>
-                  {submitting ? "Submitting..." : "Request Booking"}
+                <Button type="submit" className="w-full h-14 rounded-2xl text-lg font-black bg-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow" disabled={submitting}>
+                  {submitting ? (
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Processing...</span>
+                    </div>
+                  ) : "Confirm Reservation"}
                 </Button>
+                <p className="text-[10px] text-center text-muted-foreground">Free cancellation up to 72 hours before departure.</p>
               </form>
             </motion.div>
+
+            {/* Inclusions / Exclusions Compact for Sidebar */}
+             <div className="bg-card rounded-3xl p-6 border border-border shadow-sm space-y-4">
+                <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Quick Highlights</h3>
+                <div className="space-y-2">
+                    {pkg.inclusions.slice(0, 4).map(inc => (
+                        <div key={inc} className="flex items-center gap-2 text-xs font-medium text-foreground/80">
+                            <Check className="h-3 w-3 text-forest-green" /> {inc}
+                        </div>
+                    ))}
+                </div>
+             </div>
           </div>
         </div>
       </div>

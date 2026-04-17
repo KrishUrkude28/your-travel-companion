@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import Index from "./pages/Index.tsx";
 import PackageDetail from "./pages/PackageDetail.tsx";
 import Auth from "./pages/Auth.tsx";
@@ -29,27 +30,28 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/package/:id" element={<PackageDetail />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
-            <Route path="/trip-planner" element={<TripPlanner />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/saved-trips" element={<SavedTrips />} />
-            <Route path="/guides" element={<Guides />} />
-            <Route path="/guides/:id" element={<GuideDetail />} />
-            <Route path="/payment/:booking_id" element={<Payment />} />
-            <Route path="/flights" element={<Flights />} />
-            <Route path="/hotels" element={<Hotels />} />
-            <Route path="/trains" element={<Trains />} />
-            <Route path="/buses" element={<Buses />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/package/:id" element={<PackageDetail />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/trip-planner" element={<TripPlanner />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/saved-trips" element={<SavedTrips />} />
+              <Route path="/guides" element={<Guides />} />
+              <Route path="/guides/:id" element={<GuideDetail />} />
+              <Route path="/payment/:booking_id" element={<Payment />} />
+              <Route path="/flights" element={<Flights />} />
+              <Route path="/hotels" element={<Hotels />} />
+              <Route path="/trains" element={<Trains />} />
+              <Route path="/buses" element={<Buses />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </CurrencyProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

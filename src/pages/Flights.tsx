@@ -5,6 +5,7 @@ import { PlaneTakeoff, PlaneLanding, Calendar, Search, IndianRupee, ArrowRightLe
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Replace with a default date natively formatted
 const today = new Date();
@@ -15,6 +16,7 @@ const RAPID_API_KEY = "3ed2d19018msh08d736c7158e91dp14dec0jsne99c6e3a9136";
 const RAPID_API_HOST = "sky-scrapper.p.rapidapi.com";
 
 const Flights = () => {
+  const { formatPrice } = useCurrency();
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<any[]>([]);
@@ -250,8 +252,7 @@ const Flights = () => {
                 <div className="flex flex-col md:items-end gap-3 min-w-[150px] border-l border-border pl-6">
                   <p className="text-xs text-muted-foreground uppercase tracking-widest">Total Price</p>
                   <div className="text-3xl font-bold flex items-center text-foreground -mt-2">
-                    <IndianRupee className="h-6 w-6 mr-1 text-muted-foreground" /> 
-                    {flight.price.toLocaleString('en-IN')}
+                    {formatPrice(flight.price)}
                   </div>
                   <Link to="/payment/mock-flight">
                     <Button className="w-full md:w-auto px-8 bg-foreground text-background font-bold hover:bg-foreground/90 transition-transform hover:-translate-y-0.5 shadow-xl">

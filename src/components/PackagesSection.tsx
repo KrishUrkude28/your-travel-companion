@@ -2,10 +2,13 @@ import { motion } from "framer-motion";
 import { Clock, Users, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { packages } from "@/data/packages";
 import WishlistButton from "@/components/WishlistButton";
 
 const PackagesSection = () => {
+  const { formatPrice } = useCurrency();
+
   return (
     <section id="packages" className="py-24 bg-muted/50">
       <div className="container mx-auto px-6">
@@ -42,8 +45,8 @@ const PackagesSection = () => {
                     {pkg.type}
                   </span>
                   <div className="text-right">
-                    <p className="text-muted-foreground text-xs line-through">₹{pkg.originalPrice.toLocaleString("en-IN")}</p>
-                    <p className="text-foreground font-bold text-xl">₹{pkg.price.toLocaleString("en-IN")}</p>
+                    <p className="text-muted-foreground text-xs line-through">{formatPrice(pkg.originalPrice)}</p>
+                    <p className="text-foreground font-bold text-xl">{formatPrice(pkg.price)}</p>
                   </div>
                 </div>
 

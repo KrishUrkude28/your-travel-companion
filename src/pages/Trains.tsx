@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrainTrack, Train, Search, Users, IndianRupee, MapPin, Clock, ArrowRightLeft, ShieldCheck } from "lucide-react";
+import { TrainTrack, Train, Search, Users, MapPin, Clock, ArrowRightLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
-const mockTrains = [
+const mockTrainsData = [
   { id: "12004", name: "Shatabdi Express", type: "Premium", from: "NDLS (Delhi)", to: "BCT (Mumbai)", dep: "06:15", arr: "22:15", dur: "16h", price: 2850, classes: ["1A", "EC", "CC"] },
   { id: "12952", name: "Rajdhani Express", type: "Premium", from: "NDLS (Delhi)", to: "BCT (Mumbai)", dep: "16:25", arr: "08:15", dur: "15h 50m", price: 3100, classes: ["1A", "2A", "3A"] },
   { id: "12904", name: "Golden Temple Mail", type: "Express", from: "NDLS (Delhi)", to: "BCT (Mumbai)", dep: "07:20", arr: "05:05", dur: "21h 45m", price: 1850, classes: ["2A", "3A", "SL"] },
 ];
 
 const Trains = () => {
+  const { formatPrice } = useCurrency();
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -73,7 +75,7 @@ const Trains = () => {
              <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">Journey Date</Label>
              <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
-                <Input type="date" className="pl-10 h-14 bg-background/50 rounded-xl" required />
+                <Input type="date" className="pl-10 h-14 bg-background/50 rounded-xl" required defaultValue={new Date().toISOString().split('T')[0]} />
              </div>
           </div>
 
@@ -98,7 +100,7 @@ const Trains = () => {
                  </span>
               </div>
 
-              {mockTrains.map((train, i) => (
+              {mockTrainsData.map((train, i) => (
                 <motion.div 
                    key={train.id}
                    initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.15 }}
@@ -147,7 +149,7 @@ const Trains = () => {
                     <div className="lg:w-1/4 flex flex-col justify-center items-end border-l border-border pl-6">
                         <p className="text-sm text-muted-foreground">Starting from</p>
                         <div className="text-3xl font-bold text-foreground flex items-center my-1">
-                           <IndianRupee className="w-6 h-6 mr-1" />{train.price}
+                           {formatPrice(train.price)}
                         </div>
                         <p className="text-xs text-green-600 font-semibold mb-3">Available</p>
                         <Link to="/payment/mock-train">

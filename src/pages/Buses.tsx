@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bus, MapPin, Calendar, Search, ArrowRight, IndianRupee, Snowflake, Usb, Coffee } from "lucide-react";
+import { Bus, MapPin, Calendar, Search, ArrowRight, Snowflake, Usb, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
-const mockBuses = [
+const mockBusesData = [
   { id: "B1", operator: "IntrCity SmartBus", type: "A/C Sleeper (2+1)", depTime: "21:00", arrTime: "07:30", dur: "10h 30m", price: 1250, rating: 4.8, seats: 12 },
   { id: "B2", operator: "Zingbus", type: "Volvo Multi-Axle Semi-Sleeper", depTime: "22:15", arrTime: "09:00", dur: "10h 45m", price: 950, rating: 4.5, seats: 4 },
   { id: "B3", operator: "RedBus Assured", type: "Non A/C Seater (2+2)", depTime: "18:00", arrTime: "05:00", dur: "11h 00m", price: 550, rating: 3.9, seats: 28 },
 ];
 
 const Buses = () => {
+  const { formatPrice } = useCurrency();
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [origin, setOrigin] = useState("Delhi");
+  const [dest, setDest] = useState("Manali");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,38 +32,38 @@ const Buses = () => {
     <div className="min-h-screen bg-background pt-24 pb-12">
       {/* Dynamic Header */}
       <div className="container mx-auto px-6 max-w-6xl">
-        <div className="bg-gradient-to-br from-secondary/80 to-accent/90 rounded-3xl p-8 md:p-12 text-secondary-foreground shadow-xl relative overflow-hidden mb-12">
-           <div className="absolute top-0 right-0 p-8 opacity-20">
+        <div className="bg-gradient-to-br from-[#1A1C2E] to-[#2D3436] rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden mb-12 border border-white/10">
+           <div className="absolute top-0 right-0 p-8 opacity-10">
               <Bus className="w-64 h-64 -rotate-12 transform translate-x-10 -translate-y-10" />
            </div>
            
            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="relative z-10 max-w-2xl">
-             <h1 className="text-4xl md:text-5xl font-display font-black mb-4 text-white">Hit the Road with Comfort.</h1>
-             <p className="text-white/80 text-lg mb-8">Book premium Volvo and Sleeper buses for your inter-city travel.</p>
+             <h1 className="text-4xl md:text-5xl font-display font-black mb-4">Hit the Road with Comfort.</h1>
+             <p className="text-white/70 text-lg mb-8">Book premium Volvo and Sleeper buses for your inter-city travel.</p>
              
              {/* Search Form */}
-             <form onSubmit={handleSearch} className="bg-card w-full p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3">
-                <div className="flex-1 relative flex items-center bg-muted/50 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
-                  <MapPin className="w-5 h-5 text-muted-foreground mr-3" />
+             <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md w-full p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3 border border-white/20">
+                <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
+                  <MapPin className="w-5 h-5 text-white/50 mr-3" />
                   <div className="flex-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-0.5">Origin</p>
-                    <input className="w-full bg-transparent border-none outline-none font-bold text-foreground" defaultValue="Delhi" required />
+                    <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">Origin</p>
+                    <input className="w-full bg-transparent border-none outline-none font-bold text-white placeholder:text-white/20" value={origin} onChange={e => setOrigin(e.target.value)} required />
                   </div>
                 </div>
 
-                <div className="flex-1 relative flex items-center bg-muted/50 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
+                <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
                   <MapPin className="w-5 h-5 text-accent mr-3" />
                   <div className="flex-1">
                     <p className="text-[10px] uppercase font-bold text-accent tracking-wider mb-0.5">Destination</p>
-                    <input className="w-full bg-transparent border-none outline-none font-bold text-foreground" defaultValue="Manali" required />
+                    <input className="w-full bg-transparent border-none outline-none font-bold text-white placeholder:text-white/20" value={dest} onChange={e => setDest(e.target.value)} required />
                   </div>
                 </div>
 
-                <div className="flex-1 relative flex items-center bg-muted/50 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
-                  <Calendar className="w-5 h-5 text-muted-foreground mr-3" />
+                <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
+                  <Calendar className="w-5 h-5 text-white/50 mr-3" />
                   <div className="flex-1">
-                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-0.5">Pickup Date</p>
-                     <input type="date" className="w-full bg-transparent border-none outline-none font-bold text-foreground text-sm" required />
+                     <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">Pickup Date</p>
+                     <input type="date" className="w-full bg-transparent border-none outline-none font-bold text-white text-sm" defaultValue={new Date().toISOString().split('T')[0]} required />
                   </div>
                 </div>
 
@@ -91,7 +95,7 @@ const Buses = () => {
 
               {/* Bus Results */}
               <div className="lg:col-span-9 space-y-5">
-                {mockBuses.map((bus, idx) => (
+                {mockBusesData.map((bus, idx) => (
                    <motion.div 
                      key={bus.id}
                      initial={{ opacity: 0, scale: 0.98 }}
@@ -107,7 +111,7 @@ const Buses = () => {
                           </h3>
                           <p className="text-sm text-muted-foreground">{bus.type}</p>
                         </div>
-                        <div className="flex gap-3 mt-3 md:mt-0 opacity-70">
+                        <div className="flex gap-3 mt-3 md:mt-0 opacity-70 text-muted-foreground">
                            <div className="flex items-center gap-1 text-xs"><Snowflake className="w-4 h-4"/> A/C</div>
                            <div className="flex items-center gap-1 text-xs"><Usb className="w-4 h-4"/> Charger</div>
                            <div className="flex items-center gap-1 text-xs"><Coffee className="w-4 h-4"/> Rest Stop</div>
@@ -118,7 +122,7 @@ const Buses = () => {
                         <div className="flex-1 flex items-center gap-4 w-full">
                            <div className="text-center">
                              <p className="text-xl font-bold">{bus.depTime}</p>
-                             <p className="text-xs text-muted-foreground">Delhi</p>
+                             <p className="text-xs text-muted-foreground">{origin}</p>
                            </div>
                            <div className="flex-1 flex flex-col items-center">
                              <p className="text-xs text-muted-foreground mb-1">{bus.dur}</p>
@@ -128,13 +132,13 @@ const Buses = () => {
                            </div>
                            <div className="text-center">
                              <p className="text-xl font-bold">{bus.arrTime}</p>
-                             <p className="text-xs text-muted-foreground">Manali</p>
+                             <p className="text-xs text-muted-foreground">{dest}</p>
                            </div>
                         </div>
 
                         <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto mt-4 md:mt-0">
                            <div className="text-left md:text-right">
-                             <p className="text-2xl font-black flex items-center text-foreground"><IndianRupee className="w-5 h-5"/>{bus.price}</p>
+                             <p className="text-2xl font-black text-foreground">{formatPrice(bus.price)}</p>
                              <p className="text-xs text-destructive font-semibold">{bus.seats} Seats Left!</p>
                            </div>
                            <Link to="/payment/mock-bus">

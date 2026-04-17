@@ -34,6 +34,22 @@ export const useWishlist = () => {
     fetchItems();
   }, [fetchItems]);
 
+  // Realtime updates so the badge & lists react across tabs/components
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`wishlist-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wishlists", filter: `user_id=eq.${user.id}` },
+        () => fetchItems(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchItems]);
+
   const isSaved = (packageId: string) => items.some((i) => i.package_id === packageId);
 
   const toggle = async (packageId: string, packageTitle: string) => {
@@ -65,5 +81,5 @@ export const useWishlist = () => {
     }
   };
 
-  return { items, loading, isSaved, toggle, refresh: fetchItems };
+  return { items, loading, isSaved, toggle, refresh: fetchItems, count: items.length };
 };

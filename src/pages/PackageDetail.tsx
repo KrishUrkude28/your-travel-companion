@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoGallery from "@/components/PhotoGallery";
+import WishlistButton from "@/components/WishlistButton";
 
 const PackageDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -95,6 +96,9 @@ const PackageDetail = () => {
               <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {pkg.groupSize}</span>
             </div>
           </motion.div>
+          <div className="absolute top-24 right-6 md:right-10">
+            <WishlistButton packageId={pkg.id} packageTitle={pkg.title} variant="full" />
+          </div>
         </div>
       </div>
 

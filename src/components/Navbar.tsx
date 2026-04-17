@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen } from "lucide-react";
+import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -71,8 +71,14 @@ const Navbar = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <UserCog className="h-4 w-4 mr-2" /> Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
                   <BookOpen className="h-4 w-4 mr-2" /> My Bookings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/wishlist")}>
+                  <Heart className="h-4 w-4 mr-2" /> Wishlist
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" /> Sign Out
@@ -113,8 +119,14 @@ const Navbar = () => {
               ))}
               {user ? (
                 <>
+                  <Link to="/profile" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full">Profile</Button>
+                  </Link>
                   <Link to="/my-bookings" onClick={() => setIsOpen(false)}>
                     <Button variant="outline" size="sm" className="w-full">My Bookings</Button>
+                  </Link>
+                  <Link to="/wishlist" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full">Wishlist</Button>
                   </Link>
                   <Button size="sm" variant="ghost" className="w-full" onClick={() => { signOut(); setIsOpen(false); }}>
                     Sign Out

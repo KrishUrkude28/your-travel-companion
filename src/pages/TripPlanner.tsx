@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -52,6 +52,31 @@ const TripPlanner = () => {
     interests: [] as string[],
     requirements: "",
   });
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Prefill interests from saved travel preferences
+  useEffect(() => {
+    if (!user || prefsLoaded) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("travel_preferences")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const prefs = data?.travel_preferences ?? [];
+      if (prefs.length > 0) {
+        // Map saved preferences to matching interest options (case-insensitive substring match)
+        const matched = interestOptions.filter((opt) =>
+          prefs.some((p: string) => opt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(opt.toLowerCase().split(" ")[0])),
+        );
+        if (matched.length > 0) {
+          setForm((prev) => ({ ...prev, interests: Array.from(new Set([...prev.interests, ...matched])) }));
+          toast({ title: "Interests pre-filled", description: "Loaded from your profile preferences." });
+        }
+      }
+      setPrefsLoaded(true);
+    })();
+  }, [user, prefsLoaded, toast]);
 
   const toggleInterest = (interest: string) => {
     setForm((prev) => ({

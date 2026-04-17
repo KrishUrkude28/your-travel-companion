@@ -47,19 +47,65 @@ const GuideDetail = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [guide, setGuide] = useState<Guide | null>(null);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [newRating, setNewRating] = useState(0);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
-    const fetchGuide = async () => {
-      // simulate network request
-      const { data, error } = await supabase.from("guides").select("*").eq("id", id).maybeSingle();
+    const fetchGuideAndReviews = async () => {
+      // Fetch guide
+      const { data } = await supabase.from("guides").select("*").eq("id", id).maybeSingle();
       if (data) {
         setGuide(data as Guide);
       } else {
         setGuide(mockProfiles[id || "1"] || mockProfiles["1"]);
       }
+
+      // Fetch reviews
+      const { data: reviewData } = await supabase
+        .from("reviews")
+        .select(`*, profiles(display_name, avatar_url)`)
+        .eq("guide_id", id)
+        .order("created_at", { ascending: false });
+      
+      if (reviewData) {
+        setReviews(reviewData);
+      }
     };
-    fetchGuide();
+    fetchGuideAndReviews();
   }, [id]);
+
+  const handleSubmitReview = async () => {
+    if (!user) return;
+    setIsSubmittingReview(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .insert({
+          guide_id: id,
+          user_id: user.id, // Using the auth.uid
+          rating: newRating,
+          comment: newComment
+        })
+        .select(`*, profiles(display_name, avatar_url)`)
+        .single();
+
+      if (error) throw error;
+      
+      setReviews([data, ...reviews]);
+      setNewRating(0);
+      setNewComment("");
+      toast({ title: "Review submitted", description: "Thank you for your feedback!" });
+    } catch (err: any) {
+      toast({ title: "Failed to submit review", description: err.message, variant: "destructive" });
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const handleBooking = () => {
     if (!user) {
@@ -67,8 +113,6 @@ const GuideDetail = () => {
       navigate("/auth");
       return;
     }
-    // In a real app we would create a booking record first. For PRD payment flow, we'll route to payment mock.
-    // Assuming we generate a mock booking ID for the payment page
     const mockBookingId = "booking-" + Math.random().toString(36).substring(7);
     navigate(`/payment/${mockBookingId}`);
   };
@@ -130,6 +174,70 @@ const GuideDetail = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="bg-card rounded-2xl p-6 shadow-card border border-border">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-display text-xl font-bold">Reviews</h3>
+              </div>
+              
+              {/* Review Submission Form */}
+              {user ? (
+                <div className="mb-8 p-4 border border-border rounded-xl bg-muted/30">
+                   <h4 className="font-semibold text-sm mb-3">Write a Review</h4>
+                   <div className="flex gap-2 mb-3">
+                     {[1,2,3,4,5].map((star) => (
+                       <button key={star} type="button" onClick={() => setNewRating(star)} className="focus:outline-none">
+                         <Star className={`h-6 w-6 ${newRating >= star ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+                       </button>
+                     ))}
+                   </div>
+                   <textarea 
+                     className="w-full bg-background border border-border rounded-lg p-3 text-sm focus:ring-1 focus:ring-primary outline-none resize-none mb-3"
+                     rows={3}
+                     placeholder="Tell us about your experience..."
+                     value={newComment}
+                     onChange={(e) => setNewComment(e.target.value)}
+                   />
+                   <Button onClick={handleSubmitReview} disabled={isSubmittingReview || newRating === 0} size="sm" className="bg-primary text-primary-foreground">
+                     {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                   </Button>
+                </div>
+              ) : (
+                <div className="mb-8 p-4 border border-border rounded-xl bg-muted/30 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">Please sign in to leave a review.</p>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>Sign In</Button>
+                </div>
+              )}
+
+              {/* Review List */}
+              <div className="space-y-4">
+                {reviews.length === 0 ? (
+                  <p className="text-muted-foreground text-sm text-center py-4">No reviews yet. Be the first to review!</p>
+                ) : (
+                  reviews.map((rev: any) => (
+                    <div key={rev.id} className="border-b border-border last:border-0 pb-4 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                             {(rev.profiles?.display_name || "User").substring(0, 2)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold">{rev.profiles?.display_name || "Anonymous User"}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(rev.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <Star className="h-3 w-3 fill-accent text-accent mr-1" />
+                          <span className="text-sm font-bold">{rev.rating}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground mt-2">{rev.comment}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

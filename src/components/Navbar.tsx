@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
 const navLinks = [
@@ -109,12 +110,22 @@ const Navbar = () => {
                   <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
                     <BookOpen className="h-4 w-4 mr-2" /> My Bookings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/wishlist")}>
-                    <Heart className="h-4 w-4 mr-2" /> Wishlist
-                    {wishlistCount > 0 && (
-                      <span className="ml-auto text-xs font-semibold text-accent">{wishlistCount}</span>
-                    )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/wishlist" className="w-full flex items-center cursor-pointer">
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Wishlist</span>
+                      {wishlistCount > 0 && (
+                        <span className="ml-auto text-xs font-semibold text-accent">{wishlistCount}</span>
+                      )}
+                    </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/saved-trips" className="w-full flex items-center cursor-pointer">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      <span>Saved AI Trips</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>
                     <LogOut className="h-4 w-4 mr-2" /> Sign Out
                   </DropdownMenuItem>

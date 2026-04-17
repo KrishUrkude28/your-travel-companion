@@ -19,6 +19,7 @@ import Flights from "./pages/Flights.tsx";
 import Hotels from "./pages/Hotels.tsx";
 import Trains from "./pages/Trains.tsx";
 import Buses from "./pages/Buses.tsx";
+import SavedTrips from "./pages/SavedTrips.tsx";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/trip-planner" element={<TripPlanner />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/saved-trips" element={<SavedTrips />} />
             <Route path="/guides" element={<Guides />} />
             <Route path="/guides/:id" element={<GuideDetail />} />
             <Route path="/payment/:booking_id" element={<Payment />} />

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Sparkles, MapPin, Clock, Wallet, Users, Heart, Loader2,
-  Utensils, Calendar, Check
+  Utensils, Calendar, Check, CloudSun
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ const TripPlanner = () => {
   const { toast } = useToast();
   const [generating, setGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
+  const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
   const [form, setForm] = useState({
     destination: "",
     duration: "",
@@ -138,6 +139,13 @@ Return ONLY a valid JSON object with this exact structure:
         }),
       });
 
+      if (!res.ok) {
+        if (res.status === 503) {
+          throw new Error("The AI generation service is temporarily overloaded (503). Please wait a few seconds and try again.");
+        }
+        throw new Error(`API Error: ${res.statusText}`);
+      }
+
       const geminiData = await res.json();
       if (geminiData.error) throw new Error(geminiData.error.message);
 
@@ -145,6 +153,25 @@ Return ONLY a valid JSON object with this exact structure:
       const cleanJsonText = text.replace(/```json|```/g, "").trim();
       const generatedPlan = JSON.parse(cleanJsonText);
       setPlan(generatedPlan);
+
+      // Fetch Live Weather & Packing Predictor (Phase 2 Feature)
+      try {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(form.destination)}&count=1&language=en&format=json`);
+        const geoData = await geoRes.json();
+        if (geoData.results && geoData.results[0]) {
+           const { latitude, longitude } = geoData.results[0];
+           const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+           const weatherData = await weatherRes.json();
+           if (weatherData.current_weather) {
+              setWeather({
+                 temp: Math.round(weatherData.current_weather.temperature),
+                 desc: weatherData.current_weather.temperature < 15 ? "Pack warm clothes! 🧥" : weatherData.current_weather.temperature > 28 ? "Pack light! ☀️" : "Pack comfortable layers! 👕"
+              });
+           }
+        }
+      } catch (e) {
+         console.warn("Weather predictor failed", e);
+      }
 
       // Save to DB
       await supabase.from("trip_plans").insert({
@@ -260,9 +287,50 @@ Return ONLY a valid JSON object with this exact structure:
                 <div className="bg-card rounded-2xl p-6 shadow-elevated">
                   <h2 className="font-display text-2xl font-bold text-foreground mb-2">{plan.title}</h2>
                   <p className="text-muted-foreground text-sm mb-4">{plan.summary}</p>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
                     <span className="flex items-center gap-1"><Clock className="h-4 w-4 text-accent" /> {plan.duration}</span>
                     <span className="flex items-center gap-1"><Wallet className="h-4 w-4 text-accent" /> {plan.estimatedBudget}</span>
+                    {weather && (
+                      <span className="flex items-center gap-1 bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium shadow-sm">
+                         <CloudSun className="h-4 w-4" /> {weather.temp}°C - {weather.desc}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Phase 2 Feature: Auto-Rendered Maps Integration */}
+                  <div className="w-full h-[250px] rounded-xl overflow-hidden shadow-inner border border-border">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GEMINI_API_KEY ? "AIzaSy_MOCK_KEY_REPLACE_FOR_PRODUCTION" : ""}&q=${encodeURIComponent(form.destination)}`}
+                      // Fallback dummy map using OpenStreetMap for local testing without Google Maps API key
+                      srcDoc={`
+                        <html>
+                          <head>
+                            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                            <style>body{margin:0;padding:0;} #map{height: 100vh; width: 100vw;}</style>
+                          </head>
+                          <body>
+                            <div id="map"></div>
+                            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                            <script>
+                               // We simulate a geocoder request using Nominatim to show the real coordinates
+                               fetch("https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(form.destination)}").then(r => r.json()).then(data => {
+                                   if(data && data[0]) {
+                                      var map = L.map('map').setView([data[0].lat, data[0].lon], 11);
+                                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+                                      L.marker([data[0].lat, data[0].lon]).addTo(map).bindPopup("<b>${form.destination.replace(/["']/g, "")}</b><br>AI Trip Location").openPopup();
+                                   }
+                               });
+                            </script>
+                          </body>
+                        </html>
+                      `}
+                    ></iframe>
                   </div>
                 </div>
 

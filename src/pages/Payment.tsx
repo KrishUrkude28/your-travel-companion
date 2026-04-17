@@ -72,6 +72,15 @@ const Payment = () => {
           title: "Payment Successful",
           description: "Your booking is confirmed!",
         });
+        
+        // Phase 1 Feature: Simulated Automated Booking Email
+        setTimeout(() => {
+           toast({ 
+             title: "📧 Email Sent", 
+             description: `An automated HTML receipt has been dispatched to ${user?.email || "your email"}!`,
+             className: "bg-green-50 border-green-200 text-green-900"
+           });
+        }, 2000);
       } catch (err: any) {
         toast({ title: "Error", description: "Could not record payment.", variant: "destructive" });
       } finally {

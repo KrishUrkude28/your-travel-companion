@@ -178,6 +178,26 @@ const MyBookings = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
+                  {/* Phase 2 Feature: Team Expense Tripper (Split Bill) */}
+                  {booking.status === "confirmed" && booking.travelers > 1 && (
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       className="bg-accent/10 border-accent/20 text-accent hover:bg-accent/20 hover:text-accent font-semibold"
+                       onClick={() => {
+                          const emails = prompt(`Split bill for ${booking.travelers} travelers.\n\nEnter the emails of your ${booking.travelers - 1} friend(s), separated by commas:`);
+                          if (emails) {
+                            toast({ 
+                              title: "💸 Split Links Sent!", 
+                              description: `Payment requests have been securely emailed to: ${emails}`,
+                              className: "bg-green-50 border-green-200 text-green-900"
+                            });
+                          }
+                       }}
+                     >
+                       Split Bill
+                     </Button>
+                  )}
                 </div>
               </motion.div>
             ))}

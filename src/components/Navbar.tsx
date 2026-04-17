@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { count: wishlistCount } = useWishlist();
   const navigate = useNavigate();
 
   const handleNavClick = (href: string) => {

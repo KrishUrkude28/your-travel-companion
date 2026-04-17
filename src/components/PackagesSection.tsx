@@ -3,6 +3,7 @@ import { Clock, Users, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { packages } from "@/data/packages";
+import WishlistButton from "@/components/WishlistButton";
 
 const PackagesSection = () => {
   return (
@@ -30,8 +31,11 @@ const PackagesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15 }}
-              className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 group"
+              className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 group relative"
             >
+              <div className="absolute top-4 right-4 z-10">
+                <WishlistButton packageId={pkg.id} packageTitle={pkg.title} />
+              </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">

@@ -152,7 +152,7 @@ const SavedTrips = () => {
                         <div className="min-w-0">
                           <h3 className="font-display text-xl font-bold truncate">{trip.destination}</h3>
                           <p className="text-muted-foreground text-sm line-clamp-2 mt-0.5">
-                            {itinerary.summary || `A ${trip.duration} journey with ${trip.interests?.length || 0} interests`}
+                            {itinerary.summary ? stripMarkdown(itinerary.summary) : `A ${trip.duration} journey with ${trip.interests?.length || 0} interests`}
                           </p>
                           <div className="flex flex-wrap gap-3 mt-3 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{trip.duration}</span>
@@ -198,7 +198,7 @@ const SavedTrips = () => {
                           {/* Full Itinerary Title */}
                           {itinerary.title && (
                             <div className="px-5 py-4 bg-gradient-to-r from-primary/5 to-accent/5">
-                              <p className="text-sm font-semibold text-primary">{itinerary.title}</p>
+                              <p className="text-sm font-semibold text-primary">{stripMarkdown(itinerary.title)}</p>
                             </div>
                           )}
 
@@ -217,14 +217,14 @@ const SavedTrips = () => {
                                       {di < days.length - 1 && <div className="w-px flex-1 bg-border mt-1" />}
                                     </div>
                                     <div className="pb-4 min-w-0">
-                                      <p className="font-semibold text-sm mb-1">{d.title || `Day ${d.day || di + 1}`}</p>
+                                      <p className="font-semibold text-sm mb-1">{stripMarkdown(d.title || `Day ${d.day || di + 1}`)}</p>
                                       {Array.isArray(d.activities) && d.activities.map((act, ai) => (
                                         <div key={ai} className="text-sm text-muted-foreground flex items-start gap-2 mt-1.5">
                                           <DayIcon className="h-3.5 w-3.5 mt-0.5 shrink-0 text-accent" />
                                           <span>
                                             {typeof act === "string"
-                                              ? act
-                                              : `${act.time ? `[${act.time}] ` : ""}${act.activity}${act.description ? ` — ${act.description}` : ""}`}
+                                              ? stripMarkdown(act)
+                                              : `${act.time ? `[${act.time}] ` : ""}${stripMarkdown(act.activity)}${act.description ? ` — ${stripMarkdown(act.description)}` : ""}`}
                                           </span>
                                         </div>
                                       ))}
@@ -242,7 +242,7 @@ const SavedTrips = () => {
                               <div className="flex flex-wrap gap-2">
                                 {itinerary.highlights.map((h, i) => (
                                   <span key={i} className="px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium">
-                                    ✨ {h}
+                                    ✨ {stripMarkdown(h)}
                                   </span>
                                 ))}
                               </div>
@@ -256,7 +256,7 @@ const SavedTrips = () => {
                               <ul className="space-y-1.5">
                                 {itinerary.tips.map((tip, i) => (
                                   <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                                    <span className="text-primary shrink-0">💡</span>{tip}
+                                    <span className="text-primary shrink-0">💡</span>{stripMarkdown(tip)}
                                   </li>
                                 ))}
                               </ul>
@@ -266,7 +266,7 @@ const SavedTrips = () => {
                           {/* Raw summary fallback when no structure */}
                           {days.length === 0 && !itinerary.highlights && (
                             <div className="px-5 py-4">
-                              <p className="text-sm text-muted-foreground whitespace-pre-line">{itinerary.summary || "No detailed itinerary data available."}</p>
+                              <p className="text-sm text-muted-foreground whitespace-pre-line">{itinerary.summary ? stripMarkdown(itinerary.summary) : "No detailed itinerary data available."}</p>
                             </div>
                           )}
 

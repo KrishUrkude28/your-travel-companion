@@ -19,22 +19,23 @@ Empower travelers with culturally localized, AI-driven itineraries and a seamles
 - ✓ **Core Booking Dashboard** — (Supabase synced)
 - ✓ **Multi-Language Support** — (English and Hindi localization)
 - ✓ **Dynamic Payment Flow** — (Context-aware simulated checkout)
+- ✓ **PWA Support** — Offline manifest and service worker
+- ✓ **Search Autocomplete** — Geocoding-powered destination suggestions
+- ✓ **Real API Integration** — Live Flights/Hotels (SkyScrapper) & Razorpay SDK
 
 ### Active
 
-- [ ] **PWA Support** — Offline manifest and service worker
-- [ ] **Search Autocomplete** — Geocoding-powered destination suggestions
-- [ ] **Price Comparison** — Side-by-side travel table
 - [ ] **WhatsApp Share** — One-click itinerary sharing
 - [ ] **PDF Export** — Export AI plans to PDF
+- [ ] **Advanced Booking Filters** — Filter by time, airline, and budget
 
 ### Out of Scope
 
-- [Real API Integration] — Deferred: Moving from simulated to live Amadeus/Razorpay APIs is targeted for the next milestone.
+- [N/A]
 
 ## Context
 
-The project is built with React, Vite, and TailwindCSS (though focusing on Vanilla CSS for premium styling). It utilizes a pure black (#000000) design system for OLED mobile devices. Localization is handled via i18next.
+The project is built with React, Vite, and TailwindCSS. It utilizes a pure black (#000000) design system for OLED mobile devices. Localization is handled via i18next.
 
 ---
-*Last updated: 2026-04-18 after Phase 1 (Localization)*
+*Last updated: 2026-04-18 after Milestone 2 Expansion*

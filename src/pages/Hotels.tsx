@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Building2, MapPin, Calendar, Star, Users, Search, Wifi, Coffee, Waves } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Building2, MapPin, Calendar, Star, Users, Search, Wifi, Coffee, Waves, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,26 +9,83 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 
-const mockHotelsData = [
-  { id: 1, name: "Taj Palace Hotel", city: "New Delhi", rating: 4.8, type: "Luxury", price: 12500, img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80", amenities: ["Free WiFi", "Pool", "Spa"] },
-  { id: 2, name: "Le Meridien", city: "New Delhi", rating: 4.6, type: "Premium", price: 8900, img: "https://images.unsplash.com/photo-1551882547-ff40c0d5b5df?w=600&q=80", amenities: ["Breakfast", "Gym"] },
-  { id: 3, name: "Holiday Inn Express", city: "New Delhi", rating: 4.2, type: "Business", price: 4200, img: "https://images.unsplash.com/photo-1522798514-97ceb8c4f1c8?w=600&q=80", amenities: ["Free WiFi", "Breakfast"] },
-];
+const RAPID_API_KEY = import.meta.env.VITE_RAPID_API_KEY;
+const RAPID_API_HOST = import.meta.env.VITE_RAPID_API_HOST;
 
 const Hotels = () => {
   const { formatPrice } = useCurrency();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [destination, setDestination] = useState("New Delhi");
+  const [hotels, setHotels] = useState<any[]>([]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setSearched(false);
+    setError(null);
+    setHotels([]);
+
+    try {
+      // Step 1: Find destination entity mapping
+      const destRes = await fetch(
+        `https://${RAPID_API_HOST}/api/v1/hotels/searchDestination?query=${encodeURIComponent(destination)}`,
+        {
+          method: "GET",
+          headers: {
+            "x-rapidapi-key": RAPID_API_KEY,
+            "x-rapidapi-host": RAPID_API_HOST
+          }
+        }
+      );
+      const destData = await destRes.json();
+      
+      if (!destData.data || destData.data.length === 0) {
+        throw new Error(`Could not find location for "${destination}"`);
+      }
+      
+      const entityId = destData.data[0].entityId;
+
+      // Step 2: Fetch live hotels
+      const hotelRes = await fetch(
+        `https://${RAPID_API_HOST}/api/v1/hotels/searchHotels?entityId=${entityId}&currency=INR`,
+        {
+          method: "GET",
+          headers: {
+            "x-rapidapi-key": RAPID_API_KEY,
+            "x-rapidapi-host": RAPID_API_HOST
+          }
+        }
+      );
+      
+      const hotelData = await hotelRes.json();
+
+      if (!hotelData.data || !hotelData.data.hotels || hotelData.data.hotels.length === 0) {
+        throw new Error("No hotels found in this location.");
+      }
+
+      // Map the response to our UI schema
+      const liveHotels = hotelData.data.hotels.slice(0, 10).map((h: any) => ({
+        id: h.hotelId,
+        name: h.name,
+        rating: h.stars || 4.0,
+        type: h.propertyType || "Hotel",
+        price: Math.floor(h.price?.raw || (3000 + Math.random() * 5000)),
+        img: h.heroImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
+        amenities: h.relevantAmenities?.slice(0, 3) || ["Free WiFi", "Breakfast"]
+      }));
+
+      setHotels(liveHotels);
       setSearched(true);
-    }, 1500);
+    } catch (err: any) {
+      setError(err.message || "An error occurred while searching for hotels.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,7 +134,16 @@ const Hotels = () => {
 
       {/* Results Section */}
       <div className="container mx-auto px-6 max-w-5xl py-12">
-        {!searched && !loading && (
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl flex items-center gap-3 mb-8">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <p className="text-sm font-medium">{error}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!searched && !loading && !error && (
           <div className="text-center text-muted-foreground py-20 flex flex-col items-center">
             <Building2 className="h-16 w-16 mb-4 opacity-20" />
             <p>{t("hotels.search_prompt", "Enter your destination above to discover great stays.")}</p>
@@ -95,12 +161,12 @@ const Hotels = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <h2 className="text-xl font-bold mb-4">Top Properties in {destination}</h2>
             <div className="grid grid-cols-1 gap-6">
-              {mockHotelsData.map((hotel, idx) => (
+              {hotels.map((hotel, idx) => (
                 <motion.div 
                   key={hotel.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
+                  transition={{ delay: idx * 0.05 }}
                   className="bg-card rounded-2xl border border-border shadow-sm flex flex-col md:flex-row overflow-hidden hover:shadow-card transition-all"
                 >
                   {/* Image */}
@@ -112,23 +178,23 @@ const Hotels = () => {
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-display text-2xl font-bold text-foreground">{hotel.name}</h3>
+                        <div className="max-w-[80%]">
+                          <h3 className="font-display text-2xl font-bold text-foreground leading-tight">{hotel.name}</h3>
                           <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                             <MapPin className="h-3 w-3" /> {destination} <span className="mx-2">•</span> {hotel.type}
                           </p>
                         </div>
-                        <div className="bg-accent/10 px-2 py-1 flex items-center gap-1 rounded text-accent font-bold">
+                        <div className="bg-accent/10 px-2 py-1 flex items-center gap-1 rounded text-accent font-bold shrink-0">
                           {hotel.rating} <Star className="h-3 w-3 fill-accent" />
                         </div>
                       </div>
 
-                      <div className="flex gap-4 mt-4">
-                        {hotel.amenities.map(amenity => (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {hotel.amenities.map((amenity: string) => (
                           <div key={amenity} className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                            {amenity === "Free WiFi" && <Wifi className="h-3 w-3" />}
-                            {amenity === "Breakfast" && <Coffee className="h-3 w-3" />}
-                            {amenity === "Pool" && <Waves className="h-3 w-3" />}
+                            {amenity.toLowerCase().includes("wifi") && <Wifi className="h-3 w-3" />}
+                            {amenity.toLowerCase().includes("breakfast") && <Coffee className="h-3 w-3" />}
+                            {amenity.toLowerCase().includes("pool") && <Waves className="h-3 w-3" />}
                             {amenity}
                           </div>
                         ))}
@@ -143,7 +209,7 @@ const Hotels = () => {
                         <p className="text-xs text-muted-foreground">+ {formatPrice(Math.floor(hotel.price * 0.18))} taxes per night</p>
                       </div>
                       <Button 
-                        onClick={() => navigate(`/payment/hotel-${hotel.id}`, { state: { amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type} Room` } })}
+                        onClick={() => navigate(`/payment/hotel-${hotel.id}`, { state: { amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type}` } })}
                         className="px-8 bg-primary text-primary-foreground rounded-full"
                       >
                         {t("hotels.select_room", "Select Room")}

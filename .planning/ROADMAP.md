@@ -4,10 +4,10 @@
 
 - [x] Phase 1: Multi-language Support (English/Hindi) & Dynamic Payment Flow
 - [x] Phase 2: PWA & Search Autocomplete
+- [x] Phase 3: Real API Integration & UX Polish
 
 ## Milestone 2: Live Integration
 
-- [x] Phase 3: Real API Integration & UX Polish
 - [ ] Phase 4: Production Deployment
 
 ## Phase Details

@@ -14,8 +14,8 @@ const today = new Date();
 today.setDate(today.getDate() + 7); // Default to 7 days from now
 const defaultDate = today.toISOString().split("T")[0];
 
-const RAPID_API_KEY = "3ed2d19018msh08d736c7158e91dp14dec0jsne99c6e3a9136";
-const RAPID_API_HOST = "sky-scrapper.p.rapidapi.com";
+const RAPID_API_KEY = import.meta.env.VITE_RAPID_API_KEY;
+const RAPID_API_HOST = import.meta.env.VITE_RAPID_API_HOST;
 
 const Flights = () => {
   const { formatPrice } = useCurrency();

@@ -131,23 +131,53 @@ Return ONLY a valid JSON object with this exact structure:
   "tips": ["Tip 1", "Tip 2", "Tip 3"]
 }`;
 
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      });
-
-      if (!res.ok) {
-        if (res.status === 503) {
-          throw new Error("The AI generation service is temporarily overloaded (503). Please wait a few seconds and try again.");
+      const fetchWithRetry = async (url: string, options: any, retries = 3, delay = 2000): Promise<any> => {
+        try {
+          const res = await fetch(url, options);
+          if (res.ok) return await res.json();
+          
+          if ((res.status === 503 || res.status === 429) && retries > 0) {
+            console.warn(`Gemini API Busy (${res.status}). Retrying in ${delay}ms... (${retries} left)`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(url, options, retries - 1, delay * 2);
+          }
+          
+          if (res.status === 503) {
+            throw new Error("The AI generation service is currently overloaded. We tried multiple times, but it's still busy. Please try again in 30 seconds.");
+          }
+          
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `API Error: ${res.statusText}`);
+        } catch (error: any) {
+          if (retries > 0 && error.message.includes("Failed to fetch")) {
+             await new Promise(resolve => setTimeout(resolve, delay));
+             return fetchWithRetry(url, options, retries - 1, delay * 2);
+          }
+          throw error;
         }
-        throw new Error(`API Error: ${res.statusText}`);
-      }
+      };
 
-      const geminiData = await res.json();
-      if (geminiData.error) throw new Error(geminiData.error.message);
+      const geminiData = await fetchWithRetry(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GEMINI_KEY}` 
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 2048,
+            }
+          }),
+        }
+      );
+
+      if (!geminiData || !geminiData.candidates || !geminiData.candidates[0]) {
+        throw new Error("Invalid response format from AI service.");
+      }
 
       const text = geminiData.candidates[0].content.parts[0].text;
       const cleanJsonText = text.replace(/```json|```/g, "").trim();

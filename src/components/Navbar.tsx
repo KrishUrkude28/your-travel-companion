@@ -77,30 +77,32 @@ const Navbar = () => {
             </button>
           ))}
 
+          {/* Currency toggle — always visible for all users */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="relative h-9 px-3 rounded-full hover:bg-muted flex items-center gap-1.5 transition-colors text-xs font-bold text-foreground border border-border/50" aria-label="Currency Selector">
+                <Coins className="h-3.5 w-3.5 text-accent" />
+                {currency} ({symbol})
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              <DropdownMenuItem onClick={() => setCurrency('INR')}>INR (₹) — Indian Rupee</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCurrency('USD')}>USD ($) — US Dollar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setCurrency('EUR')}>EUR (€) — Euro</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Dark mode toggle — always visible */}
+          <button
+            onClick={toggleDarkMode}
+            aria-label="Toggle Dark Mode"
+            className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+          >
+            {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
+          </button>
+
           {user ? (
             <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="relative h-9 px-3 rounded-full hover:bg-muted flex items-center gap-1.5 transition-colors text-xs font-bold text-foreground border border-border/50">
-                    <Coins className="h-3.5 w-3.5 text-accent" />
-                    {currency} ({symbol})
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center">
-                  <DropdownMenuItem onClick={() => setCurrency('INR')}>INR (₹)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setCurrency('USD')}>USD ($)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setCurrency('EUR')}>EUR (€)</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <button
-                onClick={toggleDarkMode}
-                aria-label="Toggle Dark Mode"
-                className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
-              >
-                {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
-              </button>
-              
               <button
                 onClick={() => navigate("/wishlist")}
                 aria-label="Wishlist"
@@ -142,13 +144,7 @@ const Navbar = () => {
               </DropdownMenu>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-               <button
-                  onClick={toggleDarkMode}
-                  className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors mr-2"
-                >
-                  {isDark ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
-                </button>
+            <div className="flex items-center gap-2">
               <Link to="/auth">
                 <Button variant="ghost" size="sm">Sign In</Button>
               </Link>

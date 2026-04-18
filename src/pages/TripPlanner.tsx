@@ -13,8 +13,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 import BudgetTracker from "@/components/BudgetTracker";
+import { fetchDestinationWeather } from "@/utils/weatherPredictor";
 
 
 interface GeneratedDay {
@@ -208,22 +210,9 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
 
 
       // Fetch Live Weather & Packing Predictor (Phase 2 Feature)
-      try {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(form.destination)}&count=1&language=en&format=json`);
-        const geoData = await geoRes.json();
-        if (geoData.results && geoData.results[0]) {
-           const { latitude, longitude } = geoData.results[0];
-           const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
-           const weatherData = await weatherRes.json();
-           if (weatherData.current_weather) {
-              setWeather({
-                 temp: Math.round(weatherData.current_weather.temperature),
-                 desc: weatherData.current_weather.temperature < 15 ? "Pack warm clothes! 🧥" : weatherData.current_weather.temperature > 28 ? "Pack light! ☀️" : "Pack comfortable layers! 👕"
-              });
-           }
-        }
-      } catch (e) {
-         console.warn("Weather predictor failed", e);
+      const weatherData = await fetchDestinationWeather(form.destination);
+      if (weatherData) {
+        setWeather(weatherData);
       }
 
       // Save to DB

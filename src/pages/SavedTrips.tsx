@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Calendar, Clock, MapPin, Wallet, ArrowRight, Loader2, ListTree,
-  ChevronDown, ChevronUp, Trash2, Plane, Utensils, Hotel, Sun
+  ChevronDown, ChevronUp, Trash2, Plane, Utensils, Hotel, Sun, Share2, FileDown, Send
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { generateWhatsAppLink, exportToPDF } from "@/utils/itineraryExport";
 
 interface DayActivity {
   time?: string;
@@ -53,10 +55,12 @@ const stripMarkdown = (text: string) =>
 const SavedTrips = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -193,8 +197,9 @@ const SavedTrips = () => {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                         className="overflow-hidden"
+                        id={`itinerary-container-${trip.id}`}
                       >
-                        <div className="border-t border-border">
+                        <div className="border-t border-border" id={`itinerary-content-${trip.id}`}>
                           {/* Full Itinerary Title */}
                           {itinerary.title && (
                             <div className="px-5 py-4 bg-gradient-to-r from-primary/5 to-accent/5">
@@ -270,13 +275,51 @@ const SavedTrips = () => {
                             </div>
                           )}
 
-                          {/* Footer actions */}
-                          <div className="px-5 py-4 border-t border-border flex gap-3">
-                            <Link to="/trip-planner" className="flex-1">
+                           {/* Footer actions */}
+                          <div className="px-5 py-4 border-t border-border flex flex-wrap gap-2 itinerary-actions">
+                            <Link to="/trip-planner" className="flex-1 min-w-[140px]">
                               <Button variant="outline" className="w-full group hover:bg-primary hover:text-primary-foreground border-primary/20">
-                                Generate Similar <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                {t("trips.generate_similar", "Generate Similar")} <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                               </Button>
                             </Link>
+
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => {
+                                const link = generateWhatsAppLink(trip, itinerary);
+                                window.open(link, '_blank');
+                              }}
+                              className="border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                              title={t("trips.share_wa", "Share on WhatsApp")}
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              disabled={exportingId === trip.id}
+                              onClick={async () => {
+                                setExportingId(trip.id);
+                                try {
+                                  await exportToPDF(`itinerary-content-${trip.id}`, `TravelSathi-${trip.destination}`);
+                                  toast({ title: "Success", description: "PDF Downloaded!" });
+                                } catch (e) {
+                                  toast({ title: "Error", description: "Failed to generate PDF", variant: "destructive" });
+                                } finally {
+                                  setExportingId(null);
+                                }
+                              }}
+                              className="border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                              title={t("trips.download_pdf", "Download PDF")}
+                            >
+                              {exportingId === trip.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileDown className="h-4 w-4" />
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </motion.div>

@@ -124,7 +124,20 @@ const resources = {
         pay: "Pay",
         success_title: "Booking Confirmed!",
         success_subtitle: "Thank you for your payment. Your adventure awaits.",
-        view_bookings: "View My Bookings"
+        view_bookings: "View My Bookings",
+        trips: {
+          title: "My Saved AI Trips",
+          no_trips: "No trips planned yet",
+          no_trips_subtitle: "Use the AI Trip Planner to generate and save your first itinerary.",
+          start_planning: "Start Planning Now",
+          plan_new: "Plan New Trip",
+          generate_similar: "Generate Similar",
+          share_wa: "Share on WhatsApp",
+          download_pdf: "Download PDF",
+          itinerary_day: "Day-by-Day Itinerary",
+          highlights: "Highlights",
+          travel_tips: "Travel Tips"
+        }
       }
     }
   },
@@ -249,7 +262,20 @@ const resources = {
         pay: "भुगतान करें",
         success_title: "बुकिंग की पुष्टि हो गई!",
         success_subtitle: "आपके भुगतान के लिए धन्यवाद। आपका रोमांच इंतज़ार कर रहा है।",
-        view_bookings: "मेरी बुकिंग देखें"
+        view_bookings: "मेरी बुकिंग देखें",
+        trips: {
+          title: "मेरे सहेजे गए AI ट्रिप्स",
+          no_trips: "अभी तक कोई ट्रिप प्लान नहीं की गई है",
+          no_trips_subtitle: "अपनी पहली आईटीनेररी बनाने और सहेजने के लिए AI ट्रिप प्लानर का उपयोग करें।",
+          start_planning: "अभी योजना बनाना शुरू करें",
+          plan_new: "नई ट्रिप प्लान करें",
+          generate_similar: "समान ट्रिप बनाएं",
+          share_wa: "व्हाट्सएप पर साझा करें",
+          download_pdf: "पीडीएफ डाउनलोड करें",
+          itinerary_day: "दिन-प्रतिदिन का यात्रा कार्यक्रम",
+          highlights: "मुख्य आकर्षण",
+          travel_tips: "यात्रा के टिप्स"
+        }
       }
     }
   }

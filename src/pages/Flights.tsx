@@ -8,120 +8,30 @@ import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
 import DestinationAutocomplete from "@/components/DestinationAutocomplete";
+import { useFlightSearch } from "@/hooks/useFlightSearch";
 
 // Replace with a default date natively formatted
 const today = new Date();
 today.setDate(today.getDate() + 7); // Default to 7 days from now
 const defaultDate = today.toISOString().split("T")[0];
 
-const RAPID_API_KEY = import.meta.env.VITE_RAPID_API_KEY;
-const RAPID_API_HOST = import.meta.env.VITE_RAPID_API_HOST;
+
 
 const Flights = () => {
   const { formatPrice } = useCurrency();
   const { t } = useTranslation();
   const [searched, setSearched] = useState(false);
-
-  const [loading, setLoading] = useState(false);
-  const [flights, setFlights] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { flights, loading, error, searchFlights } = useFlightSearch();
 
   const [fromConfig, setFromConfig] = useState("New Delhi");
   const [toConfig, setToConfig] = useState("Mumbai");
   const [dateStr, setDateStr] = useState(defaultDate);
 
-  const getAirportData = async (query: string) => {
-    const res = await fetch(`https://${RAPID_API_HOST}/api/v1/flights/searchAirport?query=${encodeURIComponent(query)}`, {
-      method: "GET",
-      headers: {
-        "x-rapidapi-key": RAPID_API_KEY,
-        "x-rapidapi-host": RAPID_API_HOST
-      }
-    });
-    const json = await res.json();
-    if (!json.data || json.data.length === 0) throw new Error(`Could not find airport for "${query}"`);
-    return {
-      skyId: json.data[0].navigation.relevantHotelParams.localizedName || json.data[0].skyId,
-      entityId: json.data[0].entityId,
-      name: json.data[0].presentation.title
-    };
-  };
-
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setSearched(false);
-    setError(null);
-    setFlights([]);
-
-    try {
-      // Step 1: Find origin airport entity mappings
-      const origin = await getAirportData(fromConfig);
-      
-      // Step 2: Find destination airport entity mappings
-      const dest = await getAirportData(toConfig);
-
-      // Step 3: Fetch live flights
-      const flightRes = await fetch(
-        `https://${RAPID_API_HOST}/api/v1/flights/searchFlights?originSkyId=${origin.skyId}&destinationSkyId=${dest.skyId}&originEntityId=${origin.entityId}&destinationEntityId=${dest.entityId}&date=${dateStr}&adults=1&currency=INR`, 
-        {
-          method: "GET",
-          headers: {
-            "x-rapidapi-key": RAPID_API_KEY,
-            "x-rapidapi-host": RAPID_API_HOST
-          }
-        }
-      );
-      
-      const flightData = await flightRes.json();
-
-      if (!flightData.data || !flightData.data.itineraries || flightData.data.itineraries.length === 0) {
-        throw new Error("No flights found for this route on this date.");
-      }
-
-      // Map the complex SkyScanner object into our UI schema
-      const liveFlights = flightData.data.itineraries.slice(0, 15).map((itinerary: any, idx: number) => {
-        const leg = itinerary.legs[0];
-        return {
-          id: itinerary.id || idx,
-          airline: leg.carriers.marketing[0]?.name || "Unknown Airline",
-          logo: leg.carriers.marketing[0]?.logoUrl || "",
-          flightNo: leg.segments[0]?.flightNumber || "N/A",
-          from: leg.origin.displayCode,
-          to: leg.destination.displayCode,
-          dep: new Date(leg.departure).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-          arr: new Date(leg.arrival).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-          dur: `${Math.floor(leg.durationInMinutes / 60)}h ${leg.durationInMinutes % 60}m`,
-          price: Math.floor(itinerary.price.raw || 0),
-          stops: leg.stopCount
-        };
-      });
-
-      setFlights(liveFlights);
-      setSearched(true);
-    } catch (err: any) {
-      console.warn("Live API Failed (Likely 403 or Quota). Falling back to dynamic Real-Time Simulation:", err);
-      // Fallback: If limits hit or 403, we simulate perfectly using the user's REAL search terms so the demo never breaks
-      setTimeout(() => {
-        const fakeCodeFrom = fromConfig.substring(0, 3).toUpperCase();
-        const fakeCodeTo = toConfig.substring(0, 3).toUpperCase();
-        
-        setFlights([
-          { id: 1, airline: "IndiGo", logo: "", flightNo: "6E-214", from: fakeCodeFrom, to: fakeCodeTo, dep: "06:00", arr: "08:15", dur: "2h 15m", price: 4200, stops: 0 },
-          { id: 2, airline: "Vistara", logo: "", flightNo: "UK-951", from: fakeCodeFrom, to: fakeCodeTo, dep: "09:30", arr: "12:15", dur: "2h 45m", price: 5800, stops: 1 },
-          { id: 3, airline: "Air India", logo: "", flightNo: "AI-102", from: fakeCodeFrom, to: fakeCodeTo, dep: "14:00", arr: "16:20", dur: "2h 20m", price: 4750, stops: 0 },
-          { id: 4, airline: "SpiceJet", logo: "", flightNo: "SG-801", from: fakeCodeFrom, to: fakeCodeTo, dep: "19:15", arr: "21:30", dur: "2h 15m", price: 3900, stops: 0 },
-        ]);
-        setSearched(true);
-        setLoading(false);
-      }, 1000);
-      return; // Stop execution here so we don't set loading to false too fast in the finally block
-    } finally {
-      if (!error && !searched && loading) {
-          // Normal clean up if it didn't bounce to the fallback
-          setLoading(false);
-      }
-    }
+    await searchFlights(fromConfig, toConfig, dateStr);
+    setSearched(true);
   };
 
   return (

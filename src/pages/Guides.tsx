@@ -52,6 +52,7 @@ const mockGuides: Guide[] = [
 const Guides = () => {
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchCity, setSearchCity] = useState("");
 
   useEffect(() => {
     const fetchGuides = async () => {
@@ -81,14 +82,29 @@ const Guides = () => {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Enhance your journey with verified local guides who know the hidden gems, culture, and history of your destination.
-          </p>
         </motion.div>
+
+        {/* Search Bar */}
+        <div className="max-w-xl mx-auto mb-12 relative px-4">
+          <div className="absolute left-7 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <MapPin className="h-5 w-5" />
+          </div>
+          <input 
+            type="text" 
+            placeholder="Search guides by city (e.g. Jaipur, Mumbai)..." 
+            className="w-full h-14 pl-12 pr-6 rounded-2xl bg-card border border-border focus:ring-2 focus:ring-primary focus:outline-none shadow-sm font-medium transition-all"
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
+          />
+        </div>
 
         {loading ? (
           <div className="text-center text-muted-foreground">Loading guides...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {guides.map((guide, idx) => (
+            {guides
+              .filter(g => !searchCity || g.city.toLowerCase().includes(searchCity.toLowerCase()))
+              .map((guide, idx) => (
               <motion.div
                 key={guide.id}
                 initial={{ opacity: 0, y: 20 }}

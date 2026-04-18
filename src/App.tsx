@@ -23,6 +23,8 @@ import Hotels from "./pages/Hotels.tsx";
 import Trains from "./pages/Trains.tsx";
 import Buses from "./pages/Buses.tsx";
 import SavedTrips from "./pages/SavedTrips.tsx";
+import Restaurants from "./pages/Restaurants.tsx";
+import Community from "./pages/Community.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/hotels" element={<Hotels />} />
               <Route path="/trains" element={<Trains />} />
               <Route path="/buses" element={<Buses />} />
+              <Route path="/restaurants" element={<Restaurants />} />
+              <Route path="/community" element={<Community />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             {/* Global Components */}

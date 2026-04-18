@@ -99,7 +99,7 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 w-full mt-1 bg-background border border-border rounded-xl shadow-elevated overflow-hidden"
+            className="absolute z-[9999] w-full mt-1 bg-background border border-border rounded-xl shadow-elevated overflow-hidden"
           >
             {suggestions.map((s, i) => (
               <li key={i}>

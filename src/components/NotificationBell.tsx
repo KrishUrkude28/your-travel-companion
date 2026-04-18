@@ -4,41 +4,65 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface Notification {
+interface NotificationItem {
   id: string;
-  package_title: string;
-  status: string;
+  title: string;
+  message: string;
+  type?: string;
   created_at: string;
+  is_read?: boolean;
 }
 
 const NotificationBell = () => {
   const { user } = useAuth();
-  const [items, setItems] = useState<Notification[]>([]);
-  const [open, setOpen] = useState(false);
-  const [lastSeen, setLastSeen] = useState<string>(() =>
-    localStorage.getItem("notif_last_seen") || new Date(0).toISOString()
-  );
-  const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!user) return;
+    
     const fetch = async () => {
-      const { data } = await supabase
+      // Fetch actual notifications
+      const { data: notifs } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      
+      // Fetch bookings as notifications (legacy/fallback)
+      const { data: bookNotifs } = await supabase
         .from("bookings")
         .select("id, package_title, status, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(10);
-      if (data) setItems(data);
+        .limit(5);
+
+      const combined: NotificationItem[] = [
+        ...(notifs || []).map(n => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          created_at: n.created_at,
+          is_read: n.is_read
+        })),
+        ...(bookNotifs || []).map(b => ({
+          id: b.id,
+          title: `Booking Update: ${b.status}`,
+          message: b.package_title,
+          type: 'booking',
+          created_at: b.created_at
+        }))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 15);
+
+      setItems(combined);
     };
+
     fetch();
 
-    // Real-time subscription
+    // Real-time subscription for both tables
     const channel = supabase
-      .channel("bookings-notif")
-      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `user_id=eq.${user.id}` }, () => {
-        fetch();
-      })
+      .channel("notif-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => fetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `user_id=eq.${user.id}` }, () => fetch())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -65,10 +89,11 @@ const NotificationBell = () => {
     }
   };
 
-  const statusLabel: Record<string, { label: string; color: string }> = {
-    confirmed: { label: "Booking Confirmed ✅", color: "text-green-600" },
-    cancelled: { label: "Booking Cancelled ❌", color: "text-red-500" },
-    pending: { label: "Booking Pending ⏳", color: "text-amber-500" },
+  const typeStyles: Record<string, { label: string; color: string; icon?: string }> = {
+    booking: { label: "Travel Update ✈️", color: "text-primary" },
+    promo: { label: "Special Offer 🎁", color: "text-accent" },
+    alert: { label: "System Alert ⚠️", color: "text-destructive" },
+    permit: { label: "Permit Update 📜", color: "text-green-600" },
   };
 
   if (!user) return null;
@@ -118,17 +143,19 @@ const NotificationBell = () => {
                   No notifications yet
                 </div>
               ) : items.map((n) => {
-                const s = statusLabel[n.status] || { label: n.status, color: "text-foreground" };
+                const s = typeStyles[n.type || "booking"] || { label: "Notification", color: "text-foreground" };
                 const isNew = n.created_at > lastSeen;
                 return (
                   <div
                     key={n.id}
-                    className={`px-4 py-3 text-sm ${isNew ? "bg-primary/5" : ""}`}
+                    className={`px-4 py-3 text-sm transition-colors ${isNew ? "bg-primary/5" : "hover:bg-muted/30"}`}
                   >
                     <p className={`font-semibold ${s.color} mb-0.5`}>{s.label}</p>
-                    <p className="text-foreground truncate">{n.package_title}</p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                      {new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                    <p className="text-foreground font-medium">{n.title}</p>
+                    <p className="text-muted-foreground text-xs line-clamp-2">{n.message}</p>
+                    <p className="text-muted-foreground/60 text-[10px] mt-1.5 flex justify-between items-center">
+                      <span>{new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                      {isNew && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
                     </p>
                   </div>
                 );

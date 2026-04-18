@@ -105,6 +105,15 @@ const Profile = () => {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
+    const phoneRegex = /^(\+91[\-\s]?)?[6-9]\d{9}$/;
+    const internationalPhoneRegex = /^\+\d{1,4}[\-\s]?\d{6,14}$/;
+    
+    if (phone && !phoneRegex.test(phone) && !internationalPhoneRegex.test(phone)) {
+       toast({ title: "Invalid Phone", description: "Please enter a valid phone number including country code (+91 for India).", variant: "destructive" });
+       setSaving(false);
+       return;
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({

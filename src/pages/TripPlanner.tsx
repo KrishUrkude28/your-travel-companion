@@ -17,6 +17,7 @@ import i18n from "@/i18n";
 import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 import BudgetTracker from "@/components/BudgetTracker";
 import { fetchDestinationWeather } from "@/utils/weatherPredictor";
+import { generateWhatsAppLink, exportToPDF, uploadTripItinerary } from "@/utils/itineraryExport";
 
 
 interface GeneratedDay {
@@ -57,6 +58,7 @@ const TripPlanner = () => {
   const { t } = useTranslation();
 
   const [generating, setGenerating] = useState(false);
+  const [uploadingPDF, setUploadingPDF] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
   const [showBudget, setShowBudget] = useState(false);
@@ -143,7 +145,20 @@ const TripPlanner = () => {
         throw new Error("Please add VITE_GROQ_API_KEY to your .env file!");
       }
 
-      const prompt = `You are TravelSathi's expert travel planner. Create a detailed travel itinerary.
+      const prompt = `System Identity: You are "TravelSathi AI," a specialized travel assistant for the Indian market. Your goal is to help both Indian citizens and foreigners explore India seamlessly.
+
+Core Competencies:
+1. AI Planner: Create detailed itineraries for Indian destinations (Manali, Goa, Kerala, etc.) including hidden gems and local transport logic (Auto-rickshaws, Metro, regional trains).
+2. Support Center: Answer FAQs about bookings (Flights, Hotels, Buses, Guides). Focus strictly on India-based travel.
+3. India Expert: Provide info on local permits (like Inner Line Permits for Ladakh), regional cuisines, and safety tips for foreigners.
+
+Constraints:
+- Focus strictly on India-based travel.
+- If a user asks about Guide or Restaurant bookings, inform them these are upcoming features and ask for their location to provide recommendations.
+- If you cannot resolve a support issue, provide the contact: hello@travelsathi.com.
+- Use a helpful, professional, and culturally knowledgeable tone.
+
+User Trip Request:
 Destination: ${form.destination}
 Duration: ${form.duration}  |  Budget: ${form.budget}  |  Travelers: ${form.travelers}
 Interests: ${form.interests?.length > 0 ? form.interests.join(", ") : "General sightseeing"}
@@ -180,7 +195,7 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
           messages: [
             {
               role: "system",
-              content: "You are an expert travel planner. Always respond with valid JSON only. No markdown, no code blocks, just raw JSON."
+              content: "You are TravelSathi AI, an expert travel planner for India. Respond only in raw JSON."
             },
             {
               role: "user",
@@ -235,44 +250,46 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
 
   const shareOnWhatsApp = () => {
     if (!plan) return;
-    const text = `✈️ *${plan.title}*\n\n${plan.summary}\n\n📅 ${plan.duration} | 💰 ${plan.estimatedBudget}\n\n*Itinerary:*\n${plan.itinerary.map(d => `Day ${d.day}: ${d.title}`).join('\n')}\n\n🌟 Tips:\n${plan.tips.slice(0, 3).join('\n')}\n\n_Planned with TravelSathi AI 🌏_`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const mockTrip = { destination: form.destination, duration: form.duration };
+    const link = generateWhatsAppLink(mockTrip, plan);
+    window.open(link, '_blank');
   };
 
   const downloadAsPDF = async () => {
-    if (!plan) return;
-    const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const margin = 15;
-    let y = margin;
-    const pageH = doc.internal.pageSize.height;
-    const addLine = (text: string, size = 11, bold = false, color = '#333333') => {
-      if (y > pageH - 20) { doc.addPage(); y = margin; }
-      doc.setFontSize(size);
-      doc.setFont('helvetica', bold ? 'bold' : 'normal');
-      doc.setTextColor(color);
-      const lines = doc.splitTextToSize(text, 180);
-      doc.text(lines, margin, y);
-      y += lines.length * (size * 0.45) + 3;
-    };
-    addLine('TravelSathi AI Itinerary', 20, true, '#1a4a5a');
-    addLine(plan.title, 16, true);
-    addLine(plan.summary, 11);
-    addLine(`Duration: ${plan.duration}  |  Budget: ${plan.estimatedBudget}`, 10, false, '#666666');
-    y += 5;
-    plan.itinerary.forEach(day => {
-      addLine(`Day ${day.day}: ${day.title}`, 13, true, '#1a4a5a');
-      addLine(day.description, 10);
-      if (day.activities?.length) { addLine('Activities: ' + day.activities.join(', '), 9, false, '#555'); }
-      if (day.meals?.length) { addLine('Meals: ' + day.meals.join(' • '), 9, false, '#555'); }
-      if (day.accommodation) { addLine('Stay: ' + day.accommodation, 9, false, '#555'); }
-      y += 4;
-    });
-    if (plan.tips?.length) {
-      addLine('Travel Tips', 13, true, '#1a4a5a');
-      plan.tips.forEach(t => addLine('• ' + t, 10));
+    if (!plan || !planRef.current) return;
+    const blob = await exportToPDF(planRef.current, plan.title || "TravelSathi_Trip");
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(plan.title || "TravelSathi_Trip").replace(/\s+/g, '_')}.pdf`;
+      a.click();
     }
-    doc.save(`${plan.title.replace(/\s+/g, '_')}.pdf`);
+  };
+
+  const shareHostedPDF = async () => {
+     if (!plan || !planRef.current || !user) {
+        if (!user) toast({ title: "Login Required", description: "Please sign in to share PDF links." });
+        return;
+     }
+
+     setUploadingPDF(true);
+     try {
+        const blob = await exportToPDF(planRef.current, plan.title || "TravelSathi_Trip");
+        if (!blob) throw new Error("Failed to generate PDF");
+
+        const publicUrl = await uploadTripItinerary(blob, (plan.title || "Trip").substring(0, 20), user.id);
+        
+        const message = `Check out my travel itinerary for ${form.destination} on TravelSathi! 🌍\n\n📄 View PDF: ${publicUrl}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        
+        toast({ title: "PDF Shared!", description: "WhatsApp opened with your itinerary link." });
+     } catch (err: any) {
+        toast({ title: "Sharing Error", description: "Could not host PDF. Using text-only sharing.", variant: "destructive" });
+        shareOnWhatsApp();
+     } finally {
+        setUploadingPDF(false);
+     }
   };
 
   return (
@@ -387,8 +404,13 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
               <motion.div ref={planRef} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 {/* Action buttons */}
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={shareOnWhatsApp} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors">
-                    <MessageCircle className="h-4 w-4" /> Share on WhatsApp
+                  <button 
+                    onClick={shareHostedPDF} 
+                    disabled={uploadingPDF}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-70"
+                  >
+                    {uploadingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />} 
+                    Share PDF Link
                   </button>
                   <button onClick={downloadAsPDF} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                     <Download className="h-4 w-4" /> Download PDF

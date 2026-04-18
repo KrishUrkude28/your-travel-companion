@@ -63,6 +63,27 @@ const MyBookings = () => {
   useEffect(() => {
     if (!user) return;
     fetchBookings();
+
+    // Real-time subscription for booking updates
+    const channel = supabase
+      .channel(`my-bookings-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, toast]);
 
   // Pull to refresh logic

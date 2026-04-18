@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Generates a WhatsApp sharing link for a trip itinerary
@@ -61,9 +62,33 @@ export const exportToPDF = async (elementId: string, filename: string) => {
     });
 
     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
-    pdf.save(`${filename}.pdf`);
+    
+    // Return the blob for hosting if requested
+    return pdf.output('blob');
   } catch (error) {
     console.error('PDF Export Error:', error);
     throw error;
   }
+};
+
+/**
+ * Uploads an itinerary PDF to Supabase Storage and returns the public URL
+ */
+export const uploadTripItinerary = async (blob: Blob, filename: string, userId: string) => {
+  const path = `${userId}/${filename}-${Date.now()}.pdf`;
+  
+  const { error: uploadError } = await supabase.storage
+    .from('itineraries')
+    .upload(path, blob, {
+      contentType: 'application/pdf',
+      upsert: true
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage
+    .from('itineraries')
+    .getPublicUrl(path);
+
+  return data.publicUrl;
 };

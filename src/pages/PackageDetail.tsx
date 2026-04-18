@@ -34,7 +34,7 @@ const PackageDetail = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", travelers: "2", date: "", message: "",
+    name: "", email: "", phone: "", travelers: "2", date: "", message: "", passportNumber: "",
   });
 
   useEffect(() => {
@@ -109,12 +109,23 @@ const PackageDetail = () => {
   const total = pkg.costBreakdown.reduce((s, c) => s + c.amount, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user) {
-      toast({ title: "Sign in required", description: "Please sign in to book a package.", variant: "destructive" });
-      navigate("/auth");
+    // Validation
+    const isIndian = form.phone.startsWith("+91") || /^[6-9]\d{9}$/.test(form.phone);
+    if (!isIndian && !form.passportNumber) {
+      toast({ 
+        title: "Information Required", 
+        description: "Please provide a Passport Number for international bookings or use an Indian (+91) number.", 
+        variant: "destructive" 
+      });
       return;
+    }
+
+    const phoneRegex = /^(\+91[\-\s]?)?[6-9]\d{9}$/;
+    const internationalPhoneRegex = /^\+\d{1,4}[\-\s]?\d{6,14}$/;
+    
+    if (!phoneRegex.test(form.phone) && !internationalPhoneRegex.test(form.phone)) {
+       toast({ title: "Invalid Phone", description: "Please enter a valid phone number including country code (+91 for India).", variant: "destructive" });
+       return;
     }
 
     setSubmitting(true);
@@ -129,6 +140,7 @@ const PackageDetail = () => {
         travelers: Number(form.travelers),
         travel_date: form.date,
         message: form.message || null,
+        passport_number: form.passportNumber || null,
         status: 'pending'
       });
 
@@ -142,7 +154,7 @@ const PackageDetail = () => {
       // Simulation of email dispatch
       console.log(`[EMAIL SIM] To: ${form.email} - Subject: Booking Confirmation for ${pkg.title}`);
       
-      setForm({ name: "", email: "", phone: "", travelers: "2", date: "", message: "" });
+      setForm({ name: "", email: "", phone: "", travelers: "2", date: "", message: "", passportNumber: "" });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to submit booking", variant: "destructive" });
     } finally {
@@ -403,6 +415,16 @@ const PackageDetail = () => {
                             <Label htmlFor="date" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Date</Label>
                             <Input id="date" type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="bg-muted/50 border-none h-12 rounded-xl text-sm" />
                         </div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <Label htmlFor="phone" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Phone Number</Label>
+                        <Input id="phone" required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 ..." className="bg-muted/50 border-none h-12 rounded-xl" />
+                    </div>
+                    <div>
+                        <Label htmlFor="passport" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Passport Number {!(form.phone.startsWith("+91") || /^[6-9]\d{9}$/.test(form.phone)) && <span className="text-destructive">*</span>}</Label>
+                        <Input id="passport" value={form.passportNumber} onChange={(e) => setForm({ ...form, passportNumber: e.target.value })} placeholder="Required for Int'l Travel" className="bg-muted/50 border-none h-12 rounded-xl" />
                     </div>
                 </div>
                 <Button type="submit" className="w-full h-14 rounded-2xl text-lg font-black bg-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow" disabled={submitting}>

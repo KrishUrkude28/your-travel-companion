@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun, Coins, ChevronDown, Languages } from "lucide-react";
+import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun, Coins, ChevronDown, Languages, Utensils, Camera } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,8 @@ const navLinks = [
   { label: "Trains", href: "/trains" },
   { label: "Buses", href: "/buses" },
   { label: "Guides", href: "/guides" },
+  { label: "Dining", href: "/restaurants" },
+  { label: "Community", href: "/community" },
   { label: "AI Planner", href: "/trip-planner" },
 ];
 
@@ -47,6 +49,9 @@ const Navbar = () => {
     { label: t("nav.buses"), href: "/buses", key: "buses" },
     { label: t("nav.planner"), href: "/trip-planner", key: "planner" },
     { label: t("nav.explore"), href: "/#destinations", key: "explore" },
+    { label: t("nav.dining"), href: "/restaurants", key: "dining" },
+    { label: t("nav.community"), href: "/community", key: "community" },
+    { label: t("nav.guides"), href: "/guides", key: "guides" },
   ];
 
 
@@ -214,6 +219,9 @@ const Navbar = () => {
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center gap-2"
                 >
                   {link.key === "planner" && <Sparkles className="h-4 w-4 text-accent" />}
+                  {link.key === "dining" && <Utensils className="h-4 w-4 text-accent" />}
+                  {link.key === "community" && <Camera className="h-4 w-4 text-accent" />}
+                  {link.key === "guides" && <User className="h-4 w-4 text-accent" />}
                   {link.label}
                 </button>
               ))}

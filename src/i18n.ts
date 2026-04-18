@@ -19,7 +19,10 @@ const resources = {
         dark_mode: "Dark Mode",
         light_mode: "Light Mode",
         language: "Language",
-        back: "Back to Home"
+        back: "Back to Home",
+        dining: "Dining",
+        community: "Community",
+        guides: "Guides"
       },
       common: {
         back: "Back",
@@ -157,7 +160,10 @@ const resources = {
         dark_mode: "डार्क मोड",
         light_mode: "लाइट मोड",
         language: "भाषा",
-        back: "मुख्य पृष्ठ पर वापस"
+        back: "मुख्य पृष्ठ पर वापस",
+        dining: "भोजन",
+        community: "कम्युनिटी",
+        guides: "गाइड्स"
       },
       common: {
         back: "पीछे",

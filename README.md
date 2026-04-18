@@ -1,6 +1,6 @@
 # ✈️ TravelSathi: Your AI-Powered Travel Companion
 
-TravelSathi is a premium, high-performance web application designed to simplify travel planning and booking. Built with an **OLED-optimized Pure Black Dark Mode**, it provides a seamless and battery-efficient experience for modern travelers.
+TravelSathi is a premium, high-performance travel planning and booking platform. Built with an **OLED-optimized Pure Black Dark Mode** and powered by state-of-the-art AI, it provides a seamless and battery-efficient experience for modern travelers.
 
 ![Home Page](file:///C:/Users/asus/.gemini/antigravity/brain/8b2c09eb-9fc3-456c-bef9-343caabdc1dd/home_page_search_bar_fix_1776522793093.png)
 
@@ -10,32 +10,34 @@ TravelSathi is a premium, high-performance web application designed to simplify 
 
 ### 🧠 AI Trip Planner
 - **Intelligent Itineraries**: Generate day-by-day plans using Llama 3.3 70B (via Groq) tailored to your destination, budget, and interests.
-- **Multi-Language Support**: Fully localized in English and Hindi.
+- **Multi-Language Support**: Fully localized in English and Hindi (हिन्दी) via `react-i18next`.
 - **Weather Predictor**: Real-time packing suggestions based on live weather data at your destination.
+- **Budget Tracker**: Integrated per-trip budget monitor to keep your travel expenses in check.
 
 ### 🔍 Real-Time Search Pipeline
-- **Global Flights**: Live flight comparisons using the SkyScrapper API.
+- **Global Flights**: Live flight comparisons using the SkyScrapper API (RapidAPI).
 - **Hotel Discovery**: Find the best stays with real-time pricing and availability.
-- **Trains & Buses**: Seamless search for Indian Railways and premium bus services.
+- **Trains & Buses**: Seamless search for Indian Railways (IRCTC simulation) and premium bus services.
 
 ### 💳 Simulated Booking & Payments
 - **Secure Checkout**: Integrated Razorpay SDK workflow for a production-ready payment feel.
 - **Trust Badges**: PCI-DSS and industry-standard security indicators.
 
 ### 📱 Sharing & Portability
-- **WhatsApp Share**: Send your AI-generated plans to friends with one click.
-- **PDF Export**: Download professional, print-friendly itineraries for offline use.
+- **WhatsApp Share**: Send your AI-generated plans to friends with one click using centralized sharing utilities.
+- **PDF Export**: Download professional, print-friendly itineraries (via `jsPDF` and `html2canvas`) for offline use.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18, Vite, TypeScript
-- **Styling**: Tailwind CSS, Framer Motion (Animations)
-- **Backend/Auth**: Supabase (Database & Real-time Notifications)
+- **Styling**: Tailwind CSS, Framer Motion (Animations), Lucide Icons
+- **State & Backend**: Supabase (Database, Auth & Real-time Notifications)
 - **AI Engine**: Groq (Llama 3.3) / Google Gemini
-- **APIs**: SkyScrapper (RapidAPI), Open-Meteo, Nominatim (Geocoding)
-- **UI Components**: Shadcn UI, Lucide React
+- **APIs**: SkyScrapper (RapidAPI), Open-Meteo (Weather), Nominatim (Geocoding)
+- **Testing**: Vitest, React Testing Library, JSDOM
+- **UI Components**: Shadcn UI (Tailored for Pure Black mode)
 
 ---
 
@@ -71,6 +73,7 @@ TravelSathi is a premium, high-performance web application designed to simplify 
    VITE_SUPABASE_ANON_KEY=your_anon_key
    VITE_GROQ_API_KEY=your_groq_key
    VITE_RAPID_API_KEY=your_rapidapi_key
+   VITE_RAPID_API_HOST=your_rapidapi_host
    ```
 4. Run the development server:
    ```bash
@@ -79,17 +82,27 @@ TravelSathi is a premium, high-performance web application designed to simplify 
 
 ---
 
+## 🧪 Testing
+
+The project includes a robust testing suite for hooks, utilities, and components.
+```bash
+npm run test
+```
+
+---
+
 ## 🗺️ Roadmap
 
 - [x] Phase 1: Core UI & Authentication
 - [x] Phase 2: AI Planner & Local Features
-- [X] Phase 3: Real API Integration (Flights/Hotels)
-- [X] Phase 4: Sharing & Export (WhatsApp/PDF)
-- [ ] Phase 5: Production Deployment & SEO
+- [x] Phase 3: Real API Integration (Flights/Hotels)
+- [x] Phase 4: Sharing & Export (WhatsApp/PDF)
+- [x] Phase 5: Testing Infrastructure & QA Fixes
+- [ ] Phase 6: PWA Support & Production Deployment
 
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is for educational and portfolio demonstration purposes.
 
 Developed with ❤️ by the TravelSathi Team.

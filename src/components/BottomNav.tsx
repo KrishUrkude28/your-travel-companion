@@ -1,13 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Plane, MapPin, Sparkles, BookOpen } from "lucide-react";
+import { Home, Plane, MapPin, Sparkles, BookOpen, Camera, Utensils } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Home", icon: Home, href: "/" },
-  { label: "Flights", icon: Plane, href: "/flights" },
+  { label: "Community", icon: Camera, href: "/community" },
   { label: "AI Plan", icon: Sparkles, href: "/trip-planner", accent: true },
-  { label: "Explore", icon: MapPin, href: "/#destinations" },
+  { label: "Dining", icon: Utensils, href: "/restaurants" },
   { label: "Bookings", icon: BookOpen, href: "/my-bookings" },
 ];
 

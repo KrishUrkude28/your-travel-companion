@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Calendar, Users, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState("");
 
 
   return (
@@ -51,11 +54,11 @@ const HeroSection = () => {
         >
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl bg-muted">
-              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-              <input
-                type="text"
+              <DestinationAutocomplete
+                value={searchQuery}
+                onChange={setSearchQuery}
                 placeholder={t("hero.search_placeholder", "Where do you want to go?")}
-                className="bg-transparent w-full text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                className="w-full"
               />
             </div>
             <div className="flex gap-2">

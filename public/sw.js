@@ -1,4 +1,4 @@
-const CACHE_NAME = 'travelsathi-v1';
+const CACHE_NAME = 'travelsathi-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

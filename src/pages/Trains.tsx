@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
+import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 
 const mockTrainsData = [
   { id: "12004", name: "Shatabdi Express", type: "Premium", from: "NDLS (Delhi)", to: "BCT (Mumbai)", dep: "06:15", arr: "22:15", dur: "16h", price: 2850, classes: ["1A", "EC", "CC"] },
@@ -20,6 +21,8 @@ const Trains = () => {
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [fromCity, setFromCity] = useState("New Delhi");
+  const [toCity, setToCity] = useState("Mumbai");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,22 +57,28 @@ const Trains = () => {
           <div className="md:col-span-4 relative group">
             <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">{t("trains.from", "From Station")}</Label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
-              <Input className="pl-10 h-14 bg-background/50 border-primary/20 focus:border-primary rounded-xl text-lg" defaultValue="New Delhi (NDLS)" required />
+              <DestinationAutocomplete 
+                value={fromCity} 
+                onChange={setFromCity} 
+                className="w-full text-lg [&>div>input]:h-14 [&>div>input]:bg-background/50"
+              />
             </div>
           </div>
           
           <div className="md:col-span-1 flex items-center justify-center pt-6 hidden md:flex">
-            <motion.button whileHover={{ scale: 1.1, rotate: 180 }} whileTap={{ scale: 0.9 }} type="button" className="w-12 h-12 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg shadow-accent/20">
+            <motion.button onClick={() => { const tmp = fromCity; setFromCity(toCity); setToCity(tmp); }} whileHover={{ scale: 1.1, rotate: 180 }} whileTap={{ scale: 0.9 }} type="button" className="w-12 h-12 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg shadow-accent/20">
               <ArrowRightLeft className="w-5 h-5" />
             </motion.button>
           </div>
 
-          <div className="md:col-span-4">
+          <div className="md:col-span-4 relative group">
             <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">{t("trains.to", "To Station")}</Label>
             <div className="relative">
-               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-accent" />
-               <Input className="pl-10 h-14 bg-background/50 border-accent/20 focus:border-accent rounded-xl text-lg" defaultValue="Mumbai (BCT)" required />
+               <DestinationAutocomplete 
+                value={toCity} 
+                onChange={setToCity} 
+                className="w-full text-lg [&>div>input]:h-14 [&>div>input]:bg-background/50"
+               />
             </div>
           </div>
 

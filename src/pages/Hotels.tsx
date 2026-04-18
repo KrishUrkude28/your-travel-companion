@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
+import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 
 const mockHotelsData = [
   { id: 1, name: "Taj Palace Hotel", city: "New Delhi", rating: 4.8, type: "Luxury", price: 12500, img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80", amenities: ["Free WiFi", "Pool", "Spa"] },
@@ -45,9 +46,14 @@ const Hotels = () => {
             onSubmit={handleSearch}
             className="bg-card p-6 rounded-2xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
           >
-            <div className="md:col-span-4">
+            <div className="md:col-span-4 relative">
               <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><MapPin className="h-4 w-4" /> {t("hotels.destination", "Destination")}</Label>
-              <Input placeholder={t("hotels.dest_placeholder", "City, Hotel Name")} required value={destination} onChange={e => setDestination(e.target.value)} />
+              <DestinationAutocomplete 
+                value={destination} 
+                onChange={setDestination} 
+                placeholder={t("hotels.dest_placeholder", "City, Hotel Name")} 
+                className="w-full"
+              />
             </div>
 
             <div className="md:col-span-3">
@@ -136,9 +142,12 @@ const Hotels = () => {
                         </p>
                         <p className="text-xs text-muted-foreground">+ {formatPrice(Math.floor(hotel.price * 0.18))} taxes per night</p>
                       </div>
-                      <Link to={`/payment/hotel-${hotel.id}`} state={{ amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type} Room` }}>
-                        <Button className="px-8 bg-primary text-primary-foreground rounded-full">{t("hotels.select_room", "Select Room")}</Button>
-                      </Link>
+                      <Button 
+                        onClick={() => navigate(`/payment/hotel-${hotel.id}`, { state: { amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type} Room` } })}
+                        className="px-8 bg-primary text-primary-foreground rounded-full"
+                      >
+                        {t("hotels.select_room", "Select Room")}
+                      </Button>
                     </div>
                   </div>
                 </motion.div>

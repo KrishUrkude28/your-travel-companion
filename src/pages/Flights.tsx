@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
+import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 
 // Replace with a default date natively formatted
 const today = new Date();
@@ -142,9 +143,14 @@ const Flights = () => {
             onSubmit={handleSearch}
             className="bg-card p-6 rounded-2xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
           >
-            <div className="md:col-span-3">
+            <div className="md:col-span-3 relative">
               <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneTakeoff className="h-4 w-4" /> {t("flights.from", "From")}</Label>
-              <Input required value={fromConfig} onChange={e => setFromConfig(e.target.value)} placeholder={t("flights.from_placeholder", "City or Airport")} />
+              <DestinationAutocomplete 
+                value={fromConfig} 
+                onChange={setFromConfig} 
+                placeholder={t("flights.from_placeholder", "City or Airport")} 
+                className="w-full"
+              />
             </div>
             
             <div className="md:col-span-1 flex justify-center pb-2 hidden md:flex">
@@ -157,9 +163,14 @@ const Flights = () => {
               </Button>
             </div>
 
-            <div className="md:col-span-3">
+            <div className="md:col-span-3 relative">
               <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneLanding className="h-4 w-4" /> {t("flights.to", "To")}</Label>
-              <Input required value={toConfig} onChange={e => setToConfig(e.target.value)} placeholder={t("flights.to_placeholder", "City or Airport")} />
+              <DestinationAutocomplete 
+                value={toConfig} 
+                onChange={setToConfig} 
+                placeholder={t("flights.to_placeholder", "City or Airport")} 
+                className="w-full"
+              />
             </div>
 
             <div className="md:col-span-3">

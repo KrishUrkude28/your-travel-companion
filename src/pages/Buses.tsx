@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useTranslation } from "react-i18next";
+import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 
 const mockBusesData = [
   { id: "B1", operator: "IntrCity SmartBus", type: "A/C Sleeper (2+1)", depTime: "21:00", arrTime: "07:30", dur: "10h 30m", price: 1250, rating: 4.8, seats: 12 },
@@ -47,17 +48,29 @@ const Buses = () => {
              <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md w-full p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3 border border-white/20">
                 <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
                   <MapPin className="w-5 h-5 text-white/50 mr-3" />
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                     <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">{t("buses.origin", "Origin")}</p>
-                    <input className="w-full bg-transparent border-none outline-none font-bold text-white placeholder:text-white/20" value={origin} onChange={e => setOrigin(e.target.value)} required />
+                    <DestinationAutocomplete 
+                      value={origin} 
+                      onChange={setOrigin} 
+                      hideIcon
+                      inputClassName="!bg-transparent !border-none !outline-none !shadow-none !px-0 flex items-center font-bold text-white placeholder:text-white/30 h-8"
+                      className="w-full text-black"
+                    />
                   </div>
                 </div>
 
                 <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
                   <MapPin className="w-5 h-5 text-accent mr-3" />
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                     <p className="text-[10px] uppercase font-bold text-accent tracking-wider mb-0.5">{t("buses.destination", "Destination")}</p>
-                    <input className="w-full bg-transparent border-none outline-none font-bold text-white placeholder:text-white/20" value={dest} onChange={e => setDest(e.target.value)} required />
+                    <DestinationAutocomplete 
+                      value={dest} 
+                      onChange={setDest} 
+                      hideIcon
+                      inputClassName="!bg-transparent !border-none !outline-none !shadow-none !px-0 flex items-center font-bold text-white placeholder:text-white/30 h-8"
+                      className="w-full text-black"
+                    />
                   </div>
                 </div>
 

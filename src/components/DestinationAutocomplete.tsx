@@ -15,10 +15,12 @@ interface Props {
   onChange: (val: string) => void;
   placeholder?: string;
   className?: string;
+  inputClassName?: string;
+  hideIcon?: boolean;
   id?: string;
 }
 
-const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajasthan, Bali...", className = "", id }: Props) => {
+const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajasthan, Bali...", className = "", inputClassName = "", hideIcon = false, id }: Props) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -84,9 +86,9 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={`w-full h-10 rounded-md border border-input bg-background px-3 py-2 ${hideIcon ? 'pl-3' : 'pl-9'} text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${inputClassName}`}
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {!hideIcon && <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />}
         {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />}
       </div>
 

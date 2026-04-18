@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useWishlist } from "@/hooks/useWishlist";
+import NotificationBell from "@/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,12 +40,13 @@ const Navbar = () => {
   };
 
   const translatedLinks = [
-    { label: t("nav.home"), href: "/" },
-    { label: t("nav.flights"), href: "/flights" },
-    { label: t("nav.hotels"), href: "/hotels" },
-    { label: t("nav.planner"), href: "/trip-planner" },
-    { label: t("nav.explore"), href: "/#destinations" },
-    { label: t("nav.bookings"), href: "/my-bookings" },
+    { label: t("nav.home"), href: "/", key: "home" },
+    { label: t("nav.flights"), href: "/flights", key: "flights" },
+    { label: t("nav.hotels"), href: "/hotels", key: "hotels" },
+    { label: t("nav.trains"), href: "/trains", key: "trains" },
+    { label: t("nav.buses"), href: "/buses", key: "buses" },
+    { label: t("nav.planner"), href: "/trip-planner", key: "planner" },
+    { label: t("nav.explore"), href: "/#destinations", key: "explore" },
   ];
 
 
@@ -89,7 +91,7 @@ const Navbar = () => {
               onClick={() => handleNavClick(link.href)}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 whitespace-nowrap"
             >
-              {link.label === t("nav.planner") && <Sparkles className="h-3 w-3 text-accent" />}
+              {link.key === "planner" && <Sparkles className="h-3 w-3 text-accent" />}
               {link.label}
             </button>
           ))}
@@ -139,6 +141,7 @@ const Navbar = () => {
 
           {user ? (
             <>
+              <NotificationBell />
               <button onClick={() => navigate("/wishlist")} aria-label="Wishlist" className="relative h-9 w-9 rounded-full hover:bg-muted flex items-center justify-center transition-colors">
                 <Heart className="h-4 w-4" />
                 {wishlistCount > 0 && (
@@ -210,7 +213,7 @@ const Navbar = () => {
                   onClick={() => handleNavClick(link.href)}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center gap-2"
                 >
-                  {link.href === "/trip-planner" && <Sparkles className="h-4 w-4 text-accent" />}
+                  {link.key === "planner" && <Sparkles className="h-4 w-4 text-accent" />}
                   {link.label}
                 </button>
               ))}

@@ -2,21 +2,45 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a4a5a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
     <title>TravelSathi — Discover the World, One Trip at a Time</title>
-    <meta name="description" content="Plan, book, and manage trips easily with TravelSathi. Budget-friendly packages, hotels, and personalized travel recommendations." />
+    <meta name="description" content="Plan, book, and manage trips easily with TravelSathi. Budget-friendly packages, hotels, flights, trains, and personalized AI travel recommendations." />
     <meta name="author" content="TravelSathi" />
+    <meta name="keywords" content="travel, india, packages, flights, hotels, trip planner, AI travel" />
 
     <meta property="og:title" content="TravelSathi — Your Travel Companion" />
     <meta property="og:description" content="Curated travel experiences across India and beyond. Budget-friendly packages, seamless bookings, unforgettable memories." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@TravelSathi" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80" />
+
+    <!-- Preconnect for faster resource loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://api.groq.com" />
+
+    <!-- Razorpay deferred so it doesn't block render -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=192&h=192&q=80" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </head>
 
   <body>

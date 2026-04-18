@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import ChatBot from "@/components/ChatBot";
+import BottomNav from "@/components/BottomNav";
 import Index from "./pages/Index.tsx";
 import PackageDetail from "./pages/PackageDetail.tsx";
 import Auth from "./pages/Auth.tsx";
@@ -22,7 +24,11 @@ import Trains from "./pages/Trains.tsx";
 import Buses from "./pages/Buses.tsx";
 import SavedTrips from "./pages/SavedTrips.tsx";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 1000 * 60 * 5, retry: 1 },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -50,6 +56,9 @@ const App = () => (
               <Route path="/buses" element={<Buses />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            {/* Global Components */}
+            <ChatBot />
+            <BottomNav />
           </AuthProvider>
         </CurrencyProvider>
       </BrowserRouter>

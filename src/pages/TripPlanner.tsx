@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Sparkles, MapPin, Clock, Wallet, Users, Heart, Loader2,
-  Utensils, Calendar, Check, CloudSun
+  Utensils, Check, CloudSun, Share2, Download, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,9 +101,9 @@ const TripPlanner = () => {
     setPlan(null);
 
     try {
-      const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!GEMINI_KEY) {
-        throw new Error("Please add VITE_GEMINI_API_KEY to your .env file!");
+      const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
+      if (!GROQ_KEY) {
+        throw new Error("Please add VITE_GROQ_API_KEY to your .env file!");
       }
 
       const prompt = `You are TravelSathi's expert travel planner. Create a detailed travel itinerary.
@@ -112,7 +112,7 @@ Duration: ${form.duration}  |  Budget: ${form.budget}  |  Travelers: ${form.trav
 Interests: ${form.interests?.length > 0 ? form.interests.join(", ") : "General sightseeing"}
 Special Requirements: ${form.requirements || "None"}
 
-Return ONLY a valid JSON object with this exact structure:
+Return ONLY a valid JSON object (no markdown, no code fences) with this exact structure:
 {
   "title": "Trip Title",
   "summary": "Brief 1-2 sentence overview of the trip",
@@ -122,67 +122,54 @@ Return ONLY a valid JSON object with this exact structure:
     {
       "day": 1,
       "title": "Day 1 Theme/Title",
-      "description": "Detailed description of the day's events",
+      "description": "Detailed description of the day's events and places to visit",
       "meals": ["Breakfast spot", "Lunch spot", "Dinner spot"],
-      "activities": ["Activity 1", "Activity 2"],
+      "activities": ["Activity 1", "Activity 2", "Activity 3"],
       "accommodation": "Hotel/resort name"
     }
   ],
-  "tips": ["Tip 1", "Tip 2", "Tip 3"]
+  "tips": ["Tip 1", "Tip 2", "Tip 3", "Tip 4"]
 }`;
 
-      const fetchWithRetry = async (url: string, options: any, retries = 3, delay = 2000): Promise<any> => {
-        try {
-          const res = await fetch(url, options);
-          if (res.ok) return await res.json();
-          
-          if ((res.status === 503 || res.status === 429) && retries > 0) {
-            console.warn(`Gemini API Busy (${res.status}). Retrying in ${delay}ms... (${retries} left)`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return fetchWithRetry(url, options, retries - 1, delay * 2);
-          }
-          
-          if (res.status === 503) {
-            throw new Error("The AI generation service is currently overloaded. We tried multiple times, but it's still busy. Please try again in 30 seconds.");
-          }
-          
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error?.message || `API Error: ${res.statusText}`);
-        } catch (error: any) {
-          if (retries > 0 && error.message.includes("Failed to fetch")) {
-             await new Promise(resolve => setTimeout(resolve, delay));
-             return fetchWithRetry(url, options, retries - 1, delay * 2);
-          }
-          throw error;
-        }
-      };
-
-      const geminiData = await fetchWithRetry(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-        {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${GEMINI_KEY}` 
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 2048,
+      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert travel planner. Always respond with valid JSON only. No markdown, no code blocks, just raw JSON."
+            },
+            {
+              role: "user",
+              content: prompt
             }
-          }),
-        }
-      );
+          ],
+          temperature: 0.7,
+          max_tokens: 4096,
+          response_format: { type: "json_object" }
+        }),
+      });
 
-      if (!geminiData || !geminiData.candidates || !geminiData.candidates[0]) {
-        throw new Error("Invalid response format from AI service.");
+      if (!groqRes.ok) {
+        const errData = await groqRes.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `Groq API Error: ${groqRes.statusText}`);
       }
 
-      const text = geminiData.candidates[0].content.parts[0].text;
+      const groqData = await groqRes.json();
+      if (!groqData.choices || !groqData.choices[0]) {
+        throw new Error("Invalid response from Groq API.");
+      }
+
+      const text = groqData.choices[0].message.content;
       const cleanJsonText = text.replace(/```json|```/g, "").trim();
       const generatedPlan = JSON.parse(cleanJsonText);
       setPlan(generatedPlan);
+
 
       // Fetch Live Weather & Packing Predictor (Phase 2 Feature)
       try {
@@ -221,9 +208,53 @@ Return ONLY a valid JSON object with this exact structure:
     }
   };
 
+  const planRef = useRef<HTMLDivElement>(null);
+
+  const shareOnWhatsApp = () => {
+    if (!plan) return;
+    const text = `✈️ *${plan.title}*\n\n${plan.summary}\n\n📅 ${plan.duration} | 💰 ${plan.estimatedBudget}\n\n*Itinerary:*\n${plan.itinerary.map(d => `Day ${d.day}: ${d.title}`).join('\n')}\n\n🌟 Tips:\n${plan.tips.slice(0, 3).join('\n')}\n\n_Planned with TravelSathi AI 🌏_`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const downloadAsPDF = async () => {
+    if (!plan) return;
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const margin = 15;
+    let y = margin;
+    const pageH = doc.internal.pageSize.height;
+    const addLine = (text: string, size = 11, bold = false, color = '#333333') => {
+      if (y > pageH - 20) { doc.addPage(); y = margin; }
+      doc.setFontSize(size);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setTextColor(color);
+      const lines = doc.splitTextToSize(text, 180);
+      doc.text(lines, margin, y);
+      y += lines.length * (size * 0.45) + 3;
+    };
+    addLine('TravelSathi AI Itinerary', 20, true, '#1a4a5a');
+    addLine(plan.title, 16, true);
+    addLine(plan.summary, 11);
+    addLine(`Duration: ${plan.duration}  |  Budget: ${plan.estimatedBudget}`, 10, false, '#666666');
+    y += 5;
+    plan.itinerary.forEach(day => {
+      addLine(`Day ${day.day}: ${day.title}`, 13, true, '#1a4a5a');
+      addLine(day.description, 10);
+      if (day.activities?.length) { addLine('Activities: ' + day.activities.join(', '), 9, false, '#555'); }
+      if (day.meals?.length) { addLine('Meals: ' + day.meals.join(' • '), 9, false, '#555'); }
+      if (day.accommodation) { addLine('Stay: ' + day.accommodation, 9, false, '#555'); }
+      y += 4;
+    });
+    if (plan.tips?.length) {
+      addLine('Travel Tips', 13, true, '#1a4a5a');
+      plan.tips.forEach(t => addLine('• ' + t, 10));
+    }
+    doc.save(`${plan.title.replace(/\s+/g, '_')}.pdf`);
+  };
+
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12">
-      <div className="container mx-auto px-6">
+    <div className="min-h-screen bg-background pt-24 pb-28 sm:pb-12">
+      <div className="container mx-auto px-4 sm:px-6">
         <Link to="/">
           <Button variant="ghost" size="sm" className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
@@ -313,7 +344,16 @@ Return ONLY a valid JSON object with this exact structure:
             )}
 
             {plan && !generating && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <motion.div ref={planRef} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                {/* Share / Download actions */}
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={shareOnWhatsApp} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors">
+                    <MessageCircle className="h-4 w-4" /> Share on WhatsApp
+                  </button>
+                  <button onClick={downloadAsPDF} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+                    <Download className="h-4 w-4" /> Download PDF
+                  </button>
+                </div>
                 <div className="bg-card rounded-2xl p-6 shadow-elevated">
                   <h2 className="font-display text-2xl font-bold text-foreground mb-2">{plan.title}</h2>
                   <p className="text-muted-foreground text-sm mb-4">{plan.summary}</p>

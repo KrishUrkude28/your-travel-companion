@@ -5,6 +5,7 @@ import { Bus, MapPin, Calendar, Search, ArrowRight, Snowflake, Usb, Coffee } fro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 
 const mockBusesData = [
   { id: "B1", operator: "IntrCity SmartBus", type: "A/C Sleeper (2+1)", depTime: "21:00", arrTime: "07:30", dur: "10h 30m", price: 1250, rating: 4.8, seats: 12 },
@@ -14,6 +15,7 @@ const mockBusesData = [
 
 const Buses = () => {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [origin, setOrigin] = useState("Delhi");
@@ -38,15 +40,15 @@ const Buses = () => {
            </div>
            
            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="relative z-10 max-w-2xl">
-             <h1 className="text-4xl md:text-5xl font-display font-black mb-4">Hit the Road with Comfort.</h1>
-             <p className="text-white/70 text-lg mb-8">Book premium Volvo and Sleeper buses for your inter-city travel.</p>
+             <h1 className="text-4xl md:text-5xl font-display font-black mb-4">{t("buses.title", "Hit the Road with Comfort.")}</h1>
+             <p className="text-white/70 text-lg mb-8">{t("buses.subtitle", "Book premium Volvo and Sleeper buses for your inter-city travel.")}</p>
              
              {/* Search Form */}
              <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md w-full p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3 border border-white/20">
                 <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
                   <MapPin className="w-5 h-5 text-white/50 mr-3" />
                   <div className="flex-1">
-                    <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">Origin</p>
+                    <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">{t("buses.origin", "Origin")}</p>
                     <input className="w-full bg-transparent border-none outline-none font-bold text-white placeholder:text-white/20" value={origin} onChange={e => setOrigin(e.target.value)} required />
                   </div>
                 </div>
@@ -54,7 +56,7 @@ const Buses = () => {
                 <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
                   <MapPin className="w-5 h-5 text-accent mr-3" />
                   <div className="flex-1">
-                    <p className="text-[10px] uppercase font-bold text-accent tracking-wider mb-0.5">Destination</p>
+                    <p className="text-[10px] uppercase font-bold text-accent tracking-wider mb-0.5">{t("buses.destination", "Destination")}</p>
                     <input className="w-full bg-transparent border-none outline-none font-bold text-white placeholder:text-white/20" value={dest} onChange={e => setDest(e.target.value)} required />
                   </div>
                 </div>
@@ -62,7 +64,7 @@ const Buses = () => {
                 <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
                   <Calendar className="w-5 h-5 text-white/50 mr-3" />
                   <div className="flex-1">
-                     <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">Pickup Date</p>
+                     <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">{t("buses.date", "Pickup Date")}</p>
                      <input type="date" className="w-full bg-transparent border-none outline-none font-bold text-white text-sm" defaultValue={new Date().toISOString().split('T')[0]} required />
                   </div>
                 </div>
@@ -139,10 +141,10 @@ const Buses = () => {
                         <div className="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto mt-4 md:mt-0">
                            <div className="text-left md:text-right">
                              <p className="text-2xl font-black text-foreground">{formatPrice(bus.price)}</p>
-                             <p className="text-xs text-destructive font-semibold">{bus.seats} Seats Left!</p>
+                             <p className="text-xs text-destructive font-semibold">{bus.seats} {t("buses.seats_left", "Seats Left!")}</p>
                            </div>
-                           <Link to="/payment/mock-bus">
-                             <Button className="bg-primary text-primary-foreground font-bold px-6 py-6 rounded-xl hover:-translate-y-1 transition-transform">View Seats</Button>
+                           <Link to={`/payment/bus-${bus.id}`} state={{ amount: bus.price, service: `${bus.operator} - ${bus.type}` }}>
+                             <Button className="bg-primary text-primary-foreground font-bold px-6 py-6 rounded-xl hover:-translate-y-1 transition-transform">{t("buses.view_seats", "View Seats")}</Button>
                            </Link>
                         </div>
                      </div>

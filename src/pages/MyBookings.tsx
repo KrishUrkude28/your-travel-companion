@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Users, Clock, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Calendar, Users, Clock, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -28,6 +28,9 @@ const MyBookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [pullProgress, setPullProgress] = useState(0);
+  const [startY, setStartY] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -37,22 +40,48 @@ const MyBookings = () => {
     }
   }, [user, authLoading, navigate]);
 
+  const fetchBookings = async (isRefreshing = false) => {
+    if (isRefreshing) setRefreshing(true);
+    else setLoading(true);
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to load bookings", variant: "destructive" });
+    } else {
+      setBookings(data || []);
+    }
+
+    setLoading(false);
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-    const fetchBookings = async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) {
-        toast({ title: "Error", description: "Failed to load bookings", variant: "destructive" });
-      } else {
-        setBookings(data || []);
-      }
-      setLoading(false);
-    };
     fetchBookings();
   }, [user, toast]);
+
+  // Pull to refresh logic
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) setStartY(e.touches[0].pageY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY === 0) return;
+    const y = e.touches[0].pageY;
+    const progress = Math.min((y - startY) / 100, 1.2);
+    if (progress > 0) setPullProgress(progress);
+  };
+
+  const handleTouchEnd = () => {
+    if (pullProgress > 0.8) fetchBookings(true);
+    setStartY(0);
+    setPullProgress(0);
+  };
 
   const handleCancel = async (id: string) => {
     setCancellingId(id);
@@ -78,7 +107,32 @@ const MyBookings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12">
+    <div 
+        className="min-h-screen bg-background pt-24 pb-12"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull to refresh indicator */}
+      <AnimatePresence>
+        {(pullProgress > 0 || refreshing) && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5, y: -20 }}
+            animate={{ 
+                opacity: Math.min(pullProgress, 1), 
+                scale: Math.min(pullProgress, 1),
+                y: refreshing ? 20 : Math.min(pullProgress * 50, 50) 
+            }}
+            exit={{ opacity: 0, scale: 0.5, y: -20 }}
+            className="fixed top-20 left-0 right-0 z-50 flex justify-center pointer-events-none"
+          >
+            <div className="bg-primary text-primary-foreground p-3 rounded-full shadow-elevated">
+              <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: refreshing ? '' : `rotate(${pullProgress * 360}deg)` }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="container mx-auto px-6">
         <Link to="/">
           <Button variant="ghost" size="sm" className="mb-6">

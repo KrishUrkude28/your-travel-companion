@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Clock, Users, MapPin, Check, X, Utensils, Camera, Star, Send, MessageSquare
+  ArrowLeft, Clock, Users, MapPin, Check, X, Utensils, Camera, Star, Send, MessageSquare, Share2, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,6 +150,40 @@ const PackageDetail = () => {
     }
   };
 
+  const shareOnWhatsApp = () => {
+    const text = `✈️ *${pkg.title}*\n\n📍 ${pkg.destinations}\n📅 ${pkg.duration}\n💰 From ${formatPrice(pkg.price)}\n\n*What's included:*\n${pkg.itinerary.slice(0, 3).map(d => `Day ${d.day}: ${d.title}`).join('\n')}\n\nCheck it out on TravelSathi! 🌏`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const downloadAsPDF = async () => {
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const margin = 15;
+    let y = margin;
+    const pageH = doc.internal.pageSize.height;
+    const addLine = (text: string, size = 11, bold = false, color = '#333333') => {
+      if (y > pageH - 20) { doc.addPage(); y = margin; }
+      doc.setFontSize(size);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setTextColor(color);
+      const lines = doc.splitTextToSize(text, 180);
+      doc.text(lines, margin, y);
+      y += lines.length * (size * 0.45) + 3;
+    };
+    addLine('TravelSathi — Trip Package', 20, true, '#1a4a5a');
+    addLine(pkg.title, 16, true);
+    addLine(pkg.description.slice(0, 300) + '...', 11);
+    addLine(`Location: ${pkg.destinations} | Duration: ${pkg.duration} | Participants: ${pkg.groupSize}`, 10, false, '#666666');
+    y += 5;
+    pkg.itinerary.forEach(day => {
+      addLine(`Day ${day.day}: ${day.title}`, 13, true, '#1a4a5a');
+      addLine(day.description, 10);
+      if (day.meals?.length) { addLine('Meals: ' + day.meals.join(' • '), 9, false, '#555'); }
+      y += 4;
+    });
+    doc.save(`${pkg.title.replace(/\s+/g, '_')}.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-background pt-20">
       {/* Hero */}
@@ -178,6 +212,16 @@ const PackageDetail = () => {
               <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20"><Users className="h-4 w-4 text-accent" /> {pkg.groupSize}</span>
             </div>
           </motion.div>
+          
+          <div className="mt-6 flex gap-3">
+              <Button onClick={shareOnWhatsApp} variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 flex items-center gap-2">
+                <Share2 className="h-4 w-4" /> Share
+              </Button>
+              <Button onClick={downloadAsPDF} variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 flex items-center gap-2">
+                <Download className="h-4 w-4" /> PDF
+              </Button>
+          </div>
+
           <div className="absolute top-10 right-6 md:right-10">
             <WishlistButton packageId={pkg.id} packageTitle={pkg.title} variant="full" />
           </div>

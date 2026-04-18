@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 
 const mockTrainsData = [
   { id: "12004", name: "Shatabdi Express", type: "Premium", from: "NDLS (Delhi)", to: "BCT (Mumbai)", dep: "06:15", arr: "22:15", dur: "16h", price: 2850, classes: ["1A", "EC", "CC"] },
@@ -15,6 +16,7 @@ const mockTrainsData = [
 
 const Trains = () => {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -39,8 +41,8 @@ const Trains = () => {
           <div className="inline-flex items-center justify-center p-3 bg-card rounded-full shadow-elevated mb-4 text-primary">
              <Train className="w-8 h-8" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">IRCTC Bookings</h1>
-          <p className="text-muted-foreground text-lg">Fast, secure, and hassle-free train ticket reservations.</p>
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{t("trains.title", "IRCTC Bookings")}</h1>
+          <p className="text-muted-foreground text-lg">{t("trains.subtitle", "Fast, secure, and hassle-free train ticket reservations.")}</p>
         </motion.div>
 
         {/* Search Panel */}
@@ -50,7 +52,7 @@ const Trains = () => {
           className="bg-card/80 backdrop-blur-xl p-8 rounded-3xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-5"
         >
           <div className="md:col-span-4 relative group">
-            <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">From Station</Label>
+            <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">{t("trains.from", "From Station")}</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
               <Input className="pl-10 h-14 bg-background/50 border-primary/20 focus:border-primary rounded-xl text-lg" defaultValue="New Delhi (NDLS)" required />
@@ -64,7 +66,7 @@ const Trains = () => {
           </div>
 
           <div className="md:col-span-4">
-            <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">To Station</Label>
+            <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">{t("trains.to", "To Station")}</Label>
             <div className="relative">
                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-accent" />
                <Input className="pl-10 h-14 bg-background/50 border-accent/20 focus:border-accent rounded-xl text-lg" defaultValue="Mumbai (BCT)" required />
@@ -72,7 +74,7 @@ const Trains = () => {
           </div>
 
           <div className="md:col-span-3">
-             <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">Journey Date</Label>
+             <Label className="mb-2 block text-muted-foreground text-sm font-semibold tracking-wide">{t("trains.date", "Journey Date")}</Label>
              <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
                 <Input type="date" className="pl-10 h-14 bg-background/50 rounded-xl" required defaultValue={new Date().toISOString().split('T')[0]} />
@@ -84,7 +86,7 @@ const Trains = () => {
               {loading ? (
                 <motion.div animate={{ x: [0, 100, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute inset-0 bg-white/20 skew-x-12"></motion.div>
               ) : null}
-              {loading ? "Discovering Routes..." : "Search Trains"}
+              {loading ? t("trains.discovering", "Discovering Routes...") : t("trains.search", "Search Trains")}
             </Button>
           </div>
         </motion.form>
@@ -94,9 +96,9 @@ const Trains = () => {
           {searched && !loading && (
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-6">
               <div className="flex items-center justify-between">
-                 <h2 className="text-2xl font-display font-bold">3 Trains Found</h2>
+                 <h2 className="text-2xl font-display font-bold">{mockTrainsData.length} {t("trains.results_header", "Trains Found")}</h2>
                  <span className="text-sm text-green-600 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full font-medium flex items-center gap-1">
-                   <ShieldCheck className="w-4 h-4"/> Live Availability
+                   <ShieldCheck className="w-4 h-4"/> {t("trains.live_availability", "Live Availability")}
                  </span>
               </div>
 
@@ -152,8 +154,8 @@ const Trains = () => {
                            {formatPrice(train.price)}
                         </div>
                         <p className="text-xs text-green-600 font-semibold mb-3">Available</p>
-                        <Link to="/payment/mock-train">
-                           <Button className="w-full bg-foreground text-background hover:bg-foreground/90 font-bold px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all">Select</Button>
+                        <Link to={`/payment/train-${train.id}`} state={{ amount: train.price, service: `${train.name} (${train.id}) - Journey` }}>
+                           <Button className="w-full bg-foreground text-background hover:bg-foreground/90 font-bold px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all">{t("common.select", "Select")}</Button>
                         </Link>
                     </div>
                   </div>

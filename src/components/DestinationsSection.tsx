@@ -23,7 +23,7 @@ const DestinationsSection = () => {
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-foreground">Trending Destinations</h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto sm:overflow-x-hidden pb-4 sm:pb-0 hide-scrollbar snap-x snap-mandatory lg:snap-none">
           {destinations.map((dest, i) => (
             <motion.div
               key={dest.name}
@@ -31,7 +31,7 @@ const DestinationsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="group cursor-pointer"
+              className="group cursor-pointer min-w-[280px] sm:min-w-0 snap-center"
             >
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[3/4] shadow-card group-hover:shadow-elevated transition-shadow duration-300">
                 <img

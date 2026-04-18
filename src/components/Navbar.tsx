@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun, Coins, ChevronDown } from "lucide-react";
+import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun, Coins, ChevronDown, Languages } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -30,7 +31,22 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { currency, setCurrency, symbol } = useCurrency();
   const { count: wishlistCount } = useWishlist();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
+  const translatedLinks = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.flights"), href: "/flights" },
+    { label: t("nav.hotels"), href: "/hotels" },
+    { label: t("nav.planner"), href: "/trip-planner" },
+    { label: t("nav.explore"), href: "/#destinations" },
+    { label: t("nav.bookings"), href: "/my-bookings" },
+  ];
+
 
   const handleNavClick = (href: string) => {
     setIsOpen(false);
@@ -67,13 +83,13 @@ const Navbar = () => {
 
         {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-5 flex-1 justify-center">
-          {navLinks.map((link) => (
+          {translatedLinks.map((link) => (
             <button
               key={link.label}
               onClick={() => handleNavClick(link.href)}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 whitespace-nowrap"
             >
-              {link.label === "AI Planner" && <Sparkles className="h-3 w-3 text-accent" />}
+              {link.label === t("nav.planner") && <Sparkles className="h-3 w-3 text-accent" />}
               {link.label}
             </button>
           ))}
@@ -81,6 +97,25 @@ const Navbar = () => {
 
         {/* Right Controls */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
+          {/* Language Toggle */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-9 px-3 rounded-full hover:bg-muted flex items-center gap-1.5 transition-colors text-xs font-bold text-foreground border border-border/50 uppercase" aria-label="Language Selector">
+                <Languages className="h-3.5 w-3.5 text-accent" />
+                {i18n.language.split("-")[0]}
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-32 rounded-xl">
+              <DropdownMenuItem onClick={() => changeLanguage('en')} className="flex items-center justify-between cursor-pointer">
+                English {i18n.language.startsWith('en') && "✓"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLanguage('hi')} className="flex items-center justify-between cursor-pointer">
+                हिंदी {i18n.language.startsWith('hi') && "✓"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Currency */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -169,20 +204,32 @@ const Navbar = () => {
             className="lg:hidden bg-background border-t border-border overflow-hidden"
           >
             <div className="container mx-auto px-4 py-4 space-y-1">
-              {navLinks.map((link) => (
+              {translatedLinks.map((link) => (
                 <button
                   key={link.label}
                   onClick={() => handleNavClick(link.href)}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-muted transition-colors flex items-center gap-2"
                 >
-                  {link.label === "AI Planner" && <Sparkles className="h-4 w-4 text-accent" />}
+                  {link.href === "/trip-planner" && <Sparkles className="h-4 w-4 text-accent" />}
                   {link.label}
                 </button>
               ))}
               <div className="border-t border-border pt-3 mt-3 grid grid-cols-2 gap-2">
                 <button onClick={toggleDarkMode} className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted">
-                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {isDark ? "Light Mode" : "Dark Mode"}
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} {isDark ? t("nav.light_mode") : t("nav.dark_mode")}
                 </button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted">
+                            <Languages className="h-4 w-4 text-accent" /> {i18n.language.startsWith('hi') ? 'हिंदी' : 'English'}
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => changeLanguage('en')}>English</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => changeLanguage('hi')}>हिंदी</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
                 {user ? (
                   <>
                     <button onClick={() => { navigate("/wishlist"); setIsOpen(false); }} className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-foreground hover:bg-muted">

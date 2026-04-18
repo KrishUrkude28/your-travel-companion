@@ -2,9 +2,12 @@ import { motion } from "framer-motion";
 import { Search, Calendar, Users, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -27,15 +30,15 @@ const HeroSection = () => {
           transition={{ duration: 0.7, delay: 0.1 }}
         >
           <p className="text-accent font-semibold text-xs sm:text-sm tracking-widest uppercase mb-4">
-            Your Journey Begins Here
+            {t("hero.badge", "Your Journey Begins Here")}
           </p>
           <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-tight mb-4 sm:mb-6">
-            Discover the World,
+            {t("hero.title", "Discover the World,")}
             <br />
-            <span className="text-gradient-warm">One Trip at a Time</span>
+            <span className="text-gradient-warm">{t("hero.title_accent", "One Trip at a Time")}</span>
           </h1>
           <p className="text-white/80 text-base sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 px-4">
-            Curated travel experiences across India and beyond. Budget-friendly packages, seamless bookings, unforgettable memories.
+            {t("hero.subtitle", "Curated travel experiences across India and beyond. Budget-friendly packages, seamless bookings, unforgettable memories.")}
           </p>
         </motion.div>
 
@@ -51,7 +54,7 @@ const HeroSection = () => {
               <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <input
                 type="text"
-                placeholder="Where do you want to go?"
+                placeholder={t("hero.search_placeholder", "Where do you want to go?")}
                 className="bg-transparent w-full text-sm text-foreground placeholder:text-muted-foreground outline-none"
               />
             </div>
@@ -77,7 +80,7 @@ const HeroSection = () => {
               onClick={() => navigate("/trip-planner")}
               className="bg-primary text-primary-foreground px-6 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 whitespace-nowrap"
             >
-              Explore <ArrowRight className="h-4 w-4" />
+              {t("hero.cta", "Explore")} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </motion.div>
@@ -90,9 +93,9 @@ const HeroSection = () => {
           className="mt-10 sm:mt-14 flex items-center justify-center gap-8 sm:gap-12 text-white/70 text-sm"
         >
           {[
-            { value: "500+", label: "Destinations" },
-            { value: "10K+", label: "Happy Travelers" },
-            { value: "4.9★", label: "Rating" },
+            { value: "500+", label: t("hero.stats.dest", "Destinations") },
+            { value: "10K+", label: t("hero.stats.travelers", "Happy Travelers") },
+            { value: "4.9★", label: t("hero.stats.rating", "Rating") },
           ].map((stat, i) => (
             <div key={stat.label} className="flex items-center gap-8 sm:gap-12">
               {i > 0 && <div className="w-px h-8 bg-white/20 -ml-8 sm:-ml-12" />}

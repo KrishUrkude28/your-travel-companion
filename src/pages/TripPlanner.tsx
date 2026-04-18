@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Sparkles, MapPin, Clock, Wallet, Users, Heart, Loader2,
-  Utensils, Check, CloudSun, Share2, Download, MessageCircle
+  Utensils, Check, CloudSun, Download, MessageCircle, PiggyBank, Navigation
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import DestinationAutocomplete from "@/components/DestinationAutocomplete";
+import BudgetTracker from "@/components/BudgetTracker";
 
 
 interface GeneratedDay {
@@ -33,18 +36,29 @@ interface GeneratedPlan {
 }
 
 const interestOptions = [
-  "Culture & History", "Adventure Sports", "Beach & Relaxation", "Wildlife",
-  "Food & Cuisine", "Photography", "Shopping", "Spiritual & Wellness",
-  "Nightlife", "Family Activities"
+  { key: "culture", label: "Culture & History" },
+  { key: "adventure", label: "Adventure Sports" },
+  { key: "beach", label: "Beach & Relaxation" },
+  { key: "wildlife", label: "Wildlife" },
+  { key: "food", label: "Food & Cuisine" },
+  { key: "photography", label: "Photography" },
+  { key: "shopping", label: "Shopping" },
+  { key: "spiritual", label: "Spiritual & Wellness" },
+  { key: "nightlife", label: "Nightlife" },
+  { key: "family", label: "Family Activities" }
 ];
 
 const TripPlanner = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
+
   const [generating, setGenerating] = useState(false);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [weather, setWeather] = useState<{temp: number, desc: string} | null>(null);
+  const [showBudget, setShowBudget] = useState(false);
+  const [detectingLoc, setDetectingLoc] = useState(false);
   const [form, setForm] = useState({
     destination: "",
     duration: "",
@@ -54,6 +68,7 @@ const TripPlanner = () => {
     requirements: "",
   });
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const planRef = useRef<HTMLDivElement>(null);
 
   // Prefill interests from saved travel preferences
   useEffect(() => {
@@ -68,10 +83,10 @@ const TripPlanner = () => {
       if (prefs.length > 0) {
         // Map saved preferences to matching interest options (case-insensitive substring match)
         const matched = interestOptions.filter((opt) =>
-          prefs.some((p: string) => opt.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(opt.toLowerCase().split(" ")[0])),
+          prefs.some((p: string) => opt.label.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(opt.label.toLowerCase().split(" ")[0])),
         );
         if (matched.length > 0) {
-          setForm((prev) => ({ ...prev, interests: Array.from(new Set([...prev.interests, ...matched])) }));
+          setForm((prev) => ({ ...prev, interests: Array.from(new Set([...prev.interests, ...matched.map(m => m.key)])) }));
           toast({ title: "Interests pre-filled", description: "Loaded from your profile preferences." });
         }
       }
@@ -79,14 +94,34 @@ const TripPlanner = () => {
     })();
   }, [user, prefsLoaded, toast]);
 
-  const toggleInterest = (interest: string) => {
+  const toggleInterest = (interestKey: string) => {
     setForm((prev) => ({
       ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter((i) => i !== interest)
-        : [...prev.interests, interest],
+      interests: prev.interests.includes(interestKey)
+        ? prev.interests.filter((i) => i !== interestKey)
+        : [...prev.interests, interestKey],
     }));
   };
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) return;
+    setDetectingLoc(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+          const data = await res.json();
+          const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || "";
+          const country = data.address?.country || "";
+          if (city) setForm(f => ({ ...f, destination: country ? `${city}, ${country}` : city }));
+        } catch { /* silent */ } finally { setDetectingLoc(false); }
+      },
+      () => setDetectingLoc(false),
+      { timeout: 5000 }
+    );
+  };
+
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +147,8 @@ Duration: ${form.duration}  |  Budget: ${form.budget}  |  Travelers: ${form.trav
 Interests: ${form.interests?.length > 0 ? form.interests.join(", ") : "General sightseeing"}
 Special Requirements: ${form.requirements || "None"}
 
-Return ONLY a valid JSON object (no markdown, no code fences) with this exact structure:
+Return ONLY a valid JSON object (no markdown, no code fences) with this exact structure.
+The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
 {
   "title": "Trip Title",
   "summary": "Brief 1-2 sentence overview of the trip",
@@ -208,8 +244,6 @@ Return ONLY a valid JSON object (no markdown, no code fences) with this exact st
     }
   };
 
-  const planRef = useRef<HTMLDivElement>(null);
-
   const shareOnWhatsApp = () => {
     if (!plan) return;
     const text = `✈️ *${plan.title}*\n\n${plan.summary}\n\n📅 ${plan.duration} | 💰 ${plan.estimatedBudget}\n\n*Itinerary:*\n${plan.itinerary.map(d => `Day ${d.day}: ${d.title}`).join('\n')}\n\n🌟 Tips:\n${plan.tips.slice(0, 3).join('\n')}\n\n_Planned with TravelSathi AI 🌏_`;
@@ -257,19 +291,19 @@ Return ONLY a valid JSON object (no markdown, no code fences) with this exact st
       <div className="container mx-auto px-4 sm:px-6">
         <Link to="/">
           <Button variant="ghost" size="sm" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
+            <ArrowLeft className="h-4 w-4 mr-2" /> {t("nav.back")}
           </Button>
         </Link>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4">
-            <Sparkles className="h-4 w-4" /> AI-Powered Trip Planner
+            <Sparkles className="h-4 w-4" /> {t("nav.planner")}
           </div>
           <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-3">
-            Plan Your Dream Trip
+            {t("planner.title")}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Tell us your preferences and our AI will create a personalized day-by-day itinerary for you.
+            {t("planner.subtitle", "Tell us your preferences and our AI will create a personalized day-by-day itinerary for you.")}
           </p>
         </motion.div>
 
@@ -281,39 +315,56 @@ Return ONLY a valid JSON object (no markdown, no code fences) with this exact st
             onSubmit={handleGenerate}
             className="bg-card rounded-2xl p-8 shadow-elevated space-y-5"
           >
+            {/* Destination + GPS */}
             <div>
-              <Label htmlFor="dest" className="flex items-center gap-2"><MapPin className="h-4 w-4 text-accent" /> Destination</Label>
-              <Input id="dest" placeholder="e.g. Rajasthan, Bali, Switzerland..." value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} required maxLength={200} />
+              <Label htmlFor="dest" className="flex items-center gap-2"><MapPin className="h-4 w-4 text-accent" /> {t("planner.destination")}</Label>
+              <div className="flex gap-2 mt-1.5">
+                <DestinationAutocomplete
+                  id="dest"
+                  value={form.destination}
+                  onChange={(val) => setForm({ ...form, destination: val })}
+                  placeholder={t("planner.dest_placeholder", "e.g. Rajasthan, Bali, Switzerland...")}
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={detectLocation}
+                  title="Use my location"
+                  className="h-10 px-3 rounded-md border border-input bg-background hover:bg-muted flex items-center gap-1.5 text-sm text-muted-foreground transition-colors shrink-0"
+                >
+                  {detectingLoc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="dur" className="flex items-center gap-2"><Clock className="h-4 w-4 text-accent" /> Duration</Label>
-                <Input id="dur" placeholder="e.g. 5 days" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} required maxLength={50} />
+                <Label htmlFor="dur" className="flex items-center gap-2"><Clock className="h-4 w-4 text-accent" /> {t("planner.duration")}</Label>
+                <Input id="dur" placeholder={t("planner.dur_placeholder", "e.g. 5 days")} value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} required maxLength={50} />
               </div>
               <div>
-                <Label htmlFor="budget" className="flex items-center gap-2"><Wallet className="h-4 w-4 text-accent" /> Budget</Label>
-                <Input id="budget" placeholder="e.g. ₹50,000" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} required maxLength={50} />
+                <Label htmlFor="budget" className="flex items-center gap-2"><Wallet className="h-4 w-4 text-accent" /> {t("planner.budget")}</Label>
+                <Input id="budget" placeholder={t("planner.budget_placeholder", "e.g. ₹50,000")} value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} required maxLength={50} />
               </div>
             </div>
             <div>
-              <Label htmlFor="trav" className="flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> Travelers</Label>
+              <Label htmlFor="trav" className="flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> {t("planner.travelers")}</Label>
               <Input id="trav" type="number" min={1} max={30} value={form.travelers} onChange={(e) => setForm({ ...form, travelers: e.target.value })} required />
             </div>
             <div>
               <Label className="flex items-center gap-2 mb-2"><Heart className="h-4 w-4 text-accent" /> Interests</Label>
               <div className="flex flex-wrap gap-2">
-                {interestOptions.map((interest) => (
+                {interestOptions.map((opt) => (
                   <button
-                    key={interest}
+                    key={opt.key}
                     type="button"
-                    onClick={() => toggleInterest(interest)}
+                    onClick={() => toggleInterest(opt.key)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      form.interests.includes(interest)
+                      form.interests.includes(opt.key)
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}
                   >
-                    {interest}
+                    {t(`interests.${opt.key}`, opt.label)}
                   </button>
                 ))}
               </div>
@@ -345,13 +396,16 @@ Return ONLY a valid JSON object (no markdown, no code fences) with this exact st
 
             {plan && !generating && (
               <motion.div ref={planRef} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                {/* Share / Download actions */}
+                {/* Action buttons */}
                 <div className="flex gap-2 flex-wrap">
                   <button onClick={shareOnWhatsApp} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 text-white text-sm font-semibold hover:bg-green-600 transition-colors">
                     <MessageCircle className="h-4 w-4" /> Share on WhatsApp
                   </button>
                   <button onClick={downloadAsPDF} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                     <Download className="h-4 w-4" /> Download PDF
+                  </button>
+                  <button onClick={() => setShowBudget(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/10 text-accent border border-accent/30 text-sm font-semibold hover:bg-accent/20 transition-colors">
+                    <PiggyBank className="h-4 w-4" /> Track Budget
                   </button>
                 </div>
                 <div className="bg-card rounded-2xl p-6 shadow-elevated">
@@ -462,6 +516,17 @@ Return ONLY a valid JSON object (no markdown, no code fences) with this exact st
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showBudget && plan && (
+          <BudgetTracker
+            destination={form.destination}
+            budget={plan.estimatedBudget}
+            days={plan.itinerary.length}
+            onClose={() => setShowBudget(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

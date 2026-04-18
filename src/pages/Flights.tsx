@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 
 // Replace with a default date natively formatted
 const today = new Date();
@@ -17,7 +18,9 @@ const RAPID_API_HOST = "sky-scrapper.p.rapidapi.com";
 
 const Flights = () => {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const [searched, setSearched] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -130,8 +133,8 @@ const Flights = () => {
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
               Live Global Data Pipeline Active
             </div>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Find the Best Flights</h1>
-            <p className="text-muted-foreground text-lg">Connected via SkyScanner live APIs. Compare real prices now.</p>
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">{t("flights.title", "Find the Best Flights")}</h1>
+            <p className="text-muted-foreground text-lg">{t("flights.subtitle", "Connected via SkyScanner live APIs. Compare real prices now.")}</p>
           </motion.div>
 
           <motion.form 
@@ -140,8 +143,8 @@ const Flights = () => {
             className="bg-card p-6 rounded-2xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
           >
             <div className="md:col-span-3">
-              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneTakeoff className="h-4 w-4" /> From (City or Airport)</Label>
-              <Input required value={fromConfig} onChange={e => setFromConfig(e.target.value)} />
+              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneTakeoff className="h-4 w-4" /> {t("flights.from", "From")}</Label>
+              <Input required value={fromConfig} onChange={e => setFromConfig(e.target.value)} placeholder={t("flights.from_placeholder", "City or Airport")} />
             </div>
             
             <div className="md:col-span-1 flex justify-center pb-2 hidden md:flex">
@@ -155,8 +158,8 @@ const Flights = () => {
             </div>
 
             <div className="md:col-span-3">
-              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneLanding className="h-4 w-4" /> To (City or Airport)</Label>
-              <Input required value={toConfig} onChange={e => setToConfig(e.target.value)} />
+              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneLanding className="h-4 w-4" /> {t("flights.to", "To")}</Label>
+              <Input required value={toConfig} onChange={e => setToConfig(e.target.value)} placeholder={t("flights.to_placeholder", "City or Airport")} />
             </div>
 
             <div className="md:col-span-3">
@@ -166,7 +169,7 @@ const Flights = () => {
 
             <div className="md:col-span-2">
               <Button type="submit" className="w-full bg-primary text-primary-foreground h-10" disabled={loading}>
-                {loading ? "Scanning globally..." : <><Search className="h-4 w-4 mr-2"/> Search Live</>}
+                {loading ? t("flights.scanning", "Scanning globally...") : <><Search className="h-4 w-4 mr-2"/> {t("flights.search", "Search Flights")}</>}
               </Button>
             </div>
           </motion.form>
@@ -178,7 +181,7 @@ const Flights = () => {
         {loading && (
           <div className="text-center py-20 flex flex-col items-center">
             <PlaneTakeoff className="h-16 w-16 mb-4 text-primary animate-bounce" />
-            <p className="text-lg font-semibold animate-pulse">Contacting SkyScanner Global Matrix...</p>
+            <p className="text-lg font-semibold animate-pulse">{t("flights.contacting", "Contacting Global Matrix...")}</p>
           </div>
         )}
 
@@ -193,15 +196,15 @@ const Flights = () => {
         {!searched && !loading && !error && (
           <div className="text-center text-muted-foreground py-20 flex flex-col items-center">
              <PlaneTakeoff className="h-16 w-16 mb-4 opacity-20" />
-             <p>Enter your route above to pull live data from global carriers.</p>
+             <p>{t("flights.placeholder_hint", "Enter your route above to pull live data from global carriers.")}</p>
           </div>
         )}
 
         {searched && !loading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <div className="flex justify-between items-end mb-6">
-               <h2 className="text-xl font-bold">Real-time Flights</h2>
-               <span className="text-xs font-bold bg-accent/20 text-accent px-3 py-1 rounded-full">{flights.length} Results Found</span>
+               <h2 className="text-xl font-bold">{t("flights.results_header", "Real-time Flights")}</h2>
+               <span className="text-xs font-bold bg-accent/20 text-accent px-3 py-1 rounded-full">{flights.length} {t("flights.results_count", "Results Found")}</span>
             </div>
             
             {flights.map((flight, idx) => (
@@ -254,9 +257,9 @@ const Flights = () => {
                   <div className="text-3xl font-bold flex items-center text-foreground -mt-2">
                     {formatPrice(flight.price)}
                   </div>
-                  <Link to="/payment/mock-flight">
+                  <Link to={`/payment/flight-${flight.flightNo}`} state={{ amount: flight.price, service: `${flight.airline} - ${flight.from} to ${flight.to}` }}>
                     <Button className="w-full md:w-auto px-8 bg-foreground text-background font-bold hover:bg-foreground/90 transition-transform hover:-translate-y-0.5 shadow-xl">
-                       Select
+                       {t("flights.select", "Select")}
                     </Button>
                   </Link>
                 </div>

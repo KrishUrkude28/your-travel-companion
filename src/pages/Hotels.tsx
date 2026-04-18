@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useTranslation } from "react-i18next";
 
 const mockHotelsData = [
   { id: 1, name: "Taj Palace Hotel", city: "New Delhi", rating: 4.8, type: "Luxury", price: 12500, img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80", amenities: ["Free WiFi", "Pool", "Spa"] },
@@ -15,6 +16,7 @@ const mockHotelsData = [
 
 const Hotels = () => {
   const { formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [destination, setDestination] = useState("New Delhi");
@@ -34,8 +36,8 @@ const Hotels = () => {
       <div className="bg-primary/5 py-12 border-b border-border">
         <div className="container mx-auto px-6 max-w-5xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Book Your Stay</h1>
-            <p className="text-muted-foreground text-lg">Find the perfect hotel, resort, or homestay for your trip.</p>
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">{t("hotels.title", "Book Your Stay")}</h1>
+            <p className="text-muted-foreground text-lg">{t("hotels.subtitle", "Find the perfect hotel, resort, or homestay for your trip.")}</p>
           </motion.div>
 
           <motion.form 
@@ -44,23 +46,23 @@ const Hotels = () => {
             className="bg-card p-6 rounded-2xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
           >
             <div className="md:col-span-4">
-              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><MapPin className="h-4 w-4" /> Destination</Label>
-              <Input placeholder="City, Hotel Name" required value={destination} onChange={e => setDestination(e.target.value)} />
+              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><MapPin className="h-4 w-4" /> {t("hotels.destination", "Destination")}</Label>
+              <Input placeholder={t("hotels.dest_placeholder", "City, Hotel Name")} required value={destination} onChange={e => setDestination(e.target.value)} />
             </div>
 
             <div className="md:col-span-3">
-              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><Calendar className="h-4 w-4" /> Check-in</Label>
+              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><Calendar className="h-4 w-4" /> {t("hotels.check_in", "Check-in")}</Label>
               <Input type="date" required defaultValue={new Date().toISOString().split('T')[0]} />
             </div>
 
             <div className="md:col-span-3">
-              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><Users className="h-4 w-4" /> Guests</Label>
-              <Input type="text" placeholder="2 Adults, 1 Room" defaultValue="2 Adults, 1 Room" required />
+              <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><Users className="h-4 w-4" /> {t("hotels.guests", "Guests")}</Label>
+              <Input type="text" placeholder={t("hotels.guests_placeholder", "2 Adults, 1 Room")} defaultValue="2 Adults, 1 Room" required />
             </div>
 
             <div className="md:col-span-2">
               <Button type="submit" className="w-full bg-primary text-primary-foreground h-10" disabled={loading}>
-                {loading ? "Searching..." : <><Search className="h-4 w-4 mr-2"/> Search</>}
+                {loading ? t("common.searching", "Searching...") : <><Search className="h-4 w-4 mr-2"/> {t("hotels.search", "Search")}</>}
               </Button>
             </div>
           </motion.form>
@@ -72,14 +74,14 @@ const Hotels = () => {
         {!searched && !loading && (
           <div className="text-center text-muted-foreground py-20 flex flex-col items-center">
             <Building2 className="h-16 w-16 mb-4 opacity-20" />
-            <p>Enter your destination above to discover great stays.</p>
+            <p>{t("hotels.search_prompt", "Enter your destination above to discover great stays.")}</p>
           </div>
         )}
 
         {loading && (
             <div className="text-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Finding best rates in {destination}...</p>
+                <p className="text-muted-foreground">{t("hotels.loading_rates", "Finding best rates in")} {destination}...</p>
             </div>
         )}
 
@@ -134,8 +136,8 @@ const Hotels = () => {
                         </p>
                         <p className="text-xs text-muted-foreground">+ {formatPrice(Math.floor(hotel.price * 0.18))} taxes per night</p>
                       </div>
-                      <Link to="/payment/mock-hotel">
-                        <Button className="px-8 bg-primary text-primary-foreground rounded-full">Select Room</Button>
+                      <Link to={`/payment/hotel-${hotel.id}`} state={{ amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type} Room` }}>
+                        <Button className="px-8 bg-primary text-primary-foreground rounded-full">{t("hotels.select_room", "Select Room")}</Button>
                       </Link>
                     </div>
                   </div>

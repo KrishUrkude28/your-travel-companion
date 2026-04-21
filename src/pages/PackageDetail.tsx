@@ -49,7 +49,7 @@ const PackageDetail = () => {
       // Fetching from supabase (assuming package_id was added or using a placeholder)
       const { data, error } = await supabase
         .from("reviews")
-        .select(`*, profiles(full_name, avatar_url)`)
+        .select(`*, profiles(display_name, avatar_url)`)
         .eq("package_id", id)
         .order("created_at", { ascending: false });
 
@@ -57,8 +57,8 @@ const PackageDetail = () => {
         console.warn("Reviews fetch error (col might be missing):", error);
         // Fallback to static reviews if DB column is missing
         setReviews([
-          { id: 1, rating: 5, comment: "Absolutely incredible experience! Everything was perfectly organized.", profiles: { full_name: "Rahul Sharma", avatar_url: "" }, created_at: new Date().toISOString() },
-          { id: 2, rating: 4, comment: "Great trip, hotels were top-notch. Wish we had one more day in the mountains.", profiles: { full_name: "Anjali Gupta", avatar_url: "" }, created_at: new Date(Date.now() - 86400000).toISOString() }
+          { id: 1, rating: 5, comment: "Absolutely incredible experience! Everything was perfectly organized.", profiles: { display_name: "Rahul Sharma", avatar_url: "" }, created_at: new Date().toISOString() },
+          { id: 2, rating: 4, comment: "Great trip, hotels were top-notch. Wish we had one more day in the mountains.", profiles: { display_name: "Anjali Gupta", avatar_url: "" }, created_at: new Date(Date.now() - 86400000).toISOString() }
         ]);
       } else {
         setReviews(data || []);
@@ -342,11 +342,11 @@ const PackageDetail = () => {
                         className="flex gap-4 border-b border-border pb-8 last:border-0"
                     >
                       <div className="w-12 h-12 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center font-bold text-primary overflow-hidden border-2 border-white shadow-sm">
-                         {rev.profiles?.avatar_url ? <img src={rev.profiles.avatar_url} className="w-full h-full object-cover"/> : (rev.profiles?.full_name?.charAt(0) || "U")}
+                         {rev.profiles?.avatar_url ? <img src={rev.profiles.avatar_url} className="w-full h-full object-cover"/> : (rev.profiles?.display_name?.charAt(0) || "U")}
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-1">
-                           <h4 className="font-bold text-foreground">{rev.profiles?.full_name || "Anonymous Guest"}</h4>
+                           <h4 className="font-bold text-foreground">{rev.profiles?.display_name || "Anonymous Guest"}</h4>
                            <div className="flex gap-0.5">
                              {[...Array(5)].map((_, i) => (
                                <Star key={i} className={`h-3 w-3 ${i < rev.rating ? 'fill-accent text-accent' : 'text-muted/40'}`} />

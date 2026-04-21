@@ -13,47 +13,73 @@ interface NotificationItem {
   is_read?: boolean;
 }
 
+const typeStyles: Record<string, { label: string; color: string; icon?: string }> = {
+  booking: { label: "Travel Update ✈️", color: "text-primary" },
+  promo: { label: "Special Offer 🎁", color: "text-accent" },
+  alert: { label: "System Alert ⚠️", color: "text-destructive" },
+  permit: { label: "Permit Update 📜", color: "text-green-600" },
+};
+
 const NotificationBell = () => {
   const { user } = useAuth();
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [open, setOpen] = useState(false);
+  const [lastSeen, setLastSeen] = useState(() => {
+    try {
+      return localStorage.getItem("notif_last_seen") || new Date().toISOString();
+    } catch (e) {
+      return new Date().toISOString();
+    }
+  });
+  const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!user) return;
     
     const fetch = async () => {
-      // Fetch actual notifications
-      const { data: notifs } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      
-      // Fetch bookings as notifications (legacy/fallback)
-      const { data: bookNotifs } = await supabase
-        .from("bookings")
-        .select("id, package_title, status, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      try {
+        // Fetch actual notifications
+        const { data: notifs } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        
+        // Fetch bookings as notifications (legacy/fallback)
+        const { data: bookNotifs } = await supabase
+          .from("bookings")
+          .select("id, package_title, status, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
 
-      const combined: NotificationItem[] = [
-        ...(notifs || []).map(n => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: n.type,
-          created_at: n.created_at,
-          is_read: n.is_read
-        })),
-        ...(bookNotifs || []).map(b => ({
-          id: b.id,
-          title: `Booking Update: ${b.status}`,
-          message: b.package_title,
-          type: 'booking',
-          created_at: b.created_at
-        }))
-      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 15);
+        const combined: NotificationItem[] = [
+          ...(notifs || []).map(n => ({
+            id: n.id,
+            title: n.title || "New Notification",
+            message: n.message || "",
+            type: n.type,
+            created_at: n.created_at || new Date().toISOString(),
+            is_read: n.is_read
+          })),
+          ...(bookNotifs || []).map(b => ({
+            id: b.id,
+            title: `Booking Update: ${b.status || 'Updated'}`,
+            message: b.package_title || "Your booking has been updated.",
+            type: 'booking',
+            created_at: b.created_at || new Date().toISOString()
+          }))
+        ].sort((a, b) => {
+          const timeA = new Date(a.created_at).getTime();
+          const timeB = new Date(b.created_at).getTime();
+          return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+        }).slice(0, 15);
 
-      setItems(combined);
+        setItems(combined);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
     };
 
     fetch();
@@ -85,15 +111,12 @@ const NotificationBell = () => {
     if (!open) {
       const now = new Date().toISOString();
       setLastSeen(now);
-      localStorage.setItem("notif_last_seen", now);
+      try {
+        localStorage.setItem("notif_last_seen", now);
+      } catch (e) {
+        // Ignore storage errors
+      }
     }
-  };
-
-  const typeStyles: Record<string, { label: string; color: string; icon?: string }> = {
-    booking: { label: "Travel Update ✈️", color: "text-primary" },
-    promo: { label: "Special Offer 🎁", color: "text-accent" },
-    alert: { label: "System Alert ⚠️", color: "text-destructive" },
-    permit: { label: "Permit Update 📜", color: "text-green-600" },
   };
 
   if (!user) return null;
@@ -143,18 +166,32 @@ const NotificationBell = () => {
                   No notifications yet
                 </div>
               ) : items.map((n) => {
+                if (!n) return null;
                 const s = typeStyles[n.type || "booking"] || { label: "Notification", color: "text-foreground" };
                 const isNew = n.created_at > lastSeen;
+                
+                let dateStr = "Recently";
+                try {
+                  if (n.created_at) {
+                    dateStr = new Date(n.created_at).toLocaleString("en-IN", { 
+                      dateStyle: "medium", 
+                      timeStyle: "short" 
+                    });
+                  }
+                } catch (e) {
+                  // Fallback to "Recently"
+                }
+
                 return (
                   <div
                     key={n.id}
                     className={`px-4 py-3 text-sm transition-colors ${isNew ? "bg-primary/5" : "hover:bg-muted/30"}`}
                   >
                     <p className={`font-semibold ${s.color} mb-0.5`}>{s.label}</p>
-                    <p className="text-foreground font-medium">{n.title}</p>
-                    <p className="text-muted-foreground text-xs line-clamp-2">{n.message}</p>
+                    <p className="text-foreground font-medium">{n.title || "New Message"}</p>
+                    <p className="text-muted-foreground text-xs line-clamp-2">{n.message || ""}</p>
                     <p className="text-muted-foreground/60 text-[10px] mt-1.5 flex justify-between items-center">
-                      <span>{new Date(n.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                      <span>{dateStr}</span>
                       {isNew && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
                     </p>
                   </div>

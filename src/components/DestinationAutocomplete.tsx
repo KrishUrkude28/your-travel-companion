@@ -43,16 +43,22 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
     setLoading(true);
     try {
       const res = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=20&language=en&format=json`
       );
       const data = await res.json();
-      const results: Suggestion[] = (data.results || []).map((r: any) => ({
-        name: r.name,
-        country: r.country,
-        admin1: r.admin1,
-        latitude: r.latitude,
-        longitude: r.longitude,
-      }));
+      
+      // Programmatic filter for India-only locations
+      const results: Suggestion[] = (data.results || [])
+        .filter((r: any) => r.country === "India" || r.country_code === "IN")
+        .slice(0, 6)
+        .map((r: any) => ({
+          name: r.name,
+          country: r.country,
+          admin1: r.admin1,
+          latitude: r.latitude,
+          longitude: r.longitude,
+        }));
+        
       setSuggestions(results);
       setOpen(results.length > 0);
     } catch {
@@ -83,7 +89,10 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
           type="text"
           value={value}
           onChange={(e) => handleInput(e.target.value)}
-          onFocus={() => suggestions.length > 0 && setOpen(true)}
+          onFocus={(e) => {
+             e.target.select();
+             if (suggestions.length > 0) setOpen(true);
+          }}
           placeholder={placeholder}
           autoComplete="off"
           className={`w-full h-10 rounded-md border border-input bg-background px-3 py-2 ${hideIcon ? 'pl-3' : 'pl-9'} text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${inputClassName}`}
@@ -92,33 +101,26 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
         {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />}
       </div>
 
-      <AnimatePresence>
-        {open && suggestions.length > 0 && (
-          <motion.ul
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
-            className="absolute z-[9999] w-full mt-1 bg-background border border-border rounded-xl shadow-elevated overflow-hidden"
-          >
-            {suggestions.map((s, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  onMouseDown={() => handleSelect(s)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-muted transition-colors flex items-center gap-3 group"
-                >
-                  <MapPin className="h-4 w-4 text-accent shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{s.name}{s.admin1 ? `, ${s.admin1}` : ""}</p>
-                    <p className="text-xs text-muted-foreground">{s.country}</p>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </motion.ul>
-        )}
-      </AnimatePresence>
+      {open && suggestions.length > 0 && (
+        <ul
+          className="absolute z-[999999] left-0 right-0 mt-1 bg-white dark:bg-[#1a1c2e] border border-border rounded-xl shadow-2xl overflow-hidden max-h-[300px] overflow-y-auto"
+        >
+          {suggestions.map((s, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                onClick={() => handleSelect(s)}
+                className="w-full text-left px-4 py-3 hover:bg-muted transition-colors flex flex-col gap-0.5 border-b border-border/50 last:border-0"
+              >
+                <span className="font-bold text-slate-900 dark:text-white">{s.name}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {s.admin1 ? `${s.admin1}, ` : ""}{s.country}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

@@ -82,6 +82,7 @@ const Guides = () => {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Enhance your journey with verified local guides who know the hidden gems, culture, and history of your destination.
+          </p>
         </motion.div>
 
         {/* Search Bar */}

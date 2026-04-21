@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { MapPin, Star } from "lucide-react";
 
 const destinations = [
-  { name: "Manali", country: "India", rating: 4.8, price: "₹8,999", tag: "Adventure", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=640&q=75" },
-  { name: "Goa", country: "India", rating: 4.7, price: "₹6,499", tag: "Beach", image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=640&q=75" },
-  { name: "Bali", country: "Indonesia", rating: 4.9, price: "₹34,999", tag: "Tropical", image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=640&q=75" },
-  { name: "Kerala", country: "India", rating: 4.8, price: "₹11,999", tag: "Backwaters", image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=640&q=75" },
+  { name: "Manali", country: "India", rating: 4.8, price: "₹8,999", tag: "Adventure", image: "/destinations/manali.png" },
+  { name: "Goa", country: "India", rating: 4.7, price: "₹6,499", tag: "Beach", image: "/destinations/goa.png" },
+  { name: "Varanasi", country: "India", rating: 4.9, price: "₹4,999", tag: "Spiritual", image: "/destinations/varanasi.png" },
+  { name: "Kerala", country: "India", rating: 4.8, price: "₹11,999", tag: "Backwaters", image: "/destinations/kerala.png" },
 ];
 
 const DestinationsSection = () => {

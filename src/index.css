@@ -161,7 +161,6 @@ button, a, [role="button"] {
 /* Prevent horizontal scroll */
 .container {
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 /* Safe area for notched phones (iPhone X+) */

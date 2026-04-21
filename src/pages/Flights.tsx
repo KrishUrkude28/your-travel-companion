@@ -24,7 +24,7 @@ const Flights = () => {
   const { flights, loading, error, searchFlights } = useFlightSearch();
 
   const [fromConfig, setFromConfig] = useState("New Delhi");
-  const [toConfig, setToConfig] = useState("Mumbai");
+  const [toConfig, setToConfig] = useState("Goa");
   const [dateStr, setDateStr] = useState(defaultDate);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -51,9 +51,9 @@ const Flights = () => {
           <motion.form 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             onSubmit={handleSearch}
-            className="bg-card p-6 rounded-2xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
+            className="bg-card p-6 rounded-2xl shadow-elevated border border-border grid grid-cols-1 md:grid-cols-12 gap-4 items-end relative z-[100]"
           >
-            <div className="md:col-span-3 relative">
+            <div className="md:col-span-3 relative z-[110]">
               <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneTakeoff className="h-4 w-4" /> {t("flights.from", "From")}</Label>
               <DestinationAutocomplete 
                 value={fromConfig} 
@@ -63,7 +63,7 @@ const Flights = () => {
               />
             </div>
             
-            <div className="md:col-span-1 flex justify-center pb-2 hidden md:flex">
+            <div className="md:col-span-1 flex justify-center pb-2 hidden md:flex relative z-[110]">
               <Button type="button" variant="ghost" size="icon" className="rounded-full bg-muted text-muted-foreground" onClick={() => {
                 const temp = fromConfig;
                 setFromConfig(toConfig);
@@ -73,7 +73,7 @@ const Flights = () => {
               </Button>
             </div>
 
-            <div className="md:col-span-3 relative">
+            <div className="md:col-span-3 relative z-[110]">
               <Label className="flex items-center gap-2 mb-2 text-muted-foreground"><PlaneLanding className="h-4 w-4" /> {t("flights.to", "To")}</Label>
               <DestinationAutocomplete 
                 value={toConfig} 

@@ -35,55 +35,61 @@ const Buses = () => {
     <div className="min-h-screen bg-background pt-24 pb-12">
       {/* Dynamic Header */}
       <div className="container mx-auto px-6 max-w-6xl">
-        <div className="bg-gradient-to-br from-[#1A1C2E] to-[#2D3436] rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden mb-12 border border-white/10">
+        <div className="bg-gradient-to-br from-[#1A1C2E] to-[#2D3436] rounded-[2rem] p-10 md:p-16 text-white shadow-2xl relative overflow-hidden mb-12 border border-white/10">
            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Bus className="w-64 h-64 -rotate-12 transform translate-x-10 -translate-y-10" />
+              <Bus className="w-80 h-80 -rotate-12 transform translate-x-20 -translate-y-20" />
            </div>
            
-           <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="relative z-10 max-w-2xl">
-             <h1 className="text-4xl md:text-5xl font-display font-black mb-4">{t("buses.title", "Hit the Road with Comfort.")}</h1>
-             <p className="text-white/70 text-lg mb-8">{t("buses.subtitle", "Book premium Volvo and Sleeper buses for your inter-city travel.")}</p>
+           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-3xl mx-auto text-center">
+             <h1 className="text-5xl md:text-6xl font-display font-black mb-6 leading-tight">
+               {t("buses.title", "Travel India with Comfort.")}
+             </h1>
+             <p className="text-white/70 text-xl mb-10 max-w-xl mx-auto">
+               {t("buses.subtitle", "Book premium Volvo and Sleeper buses for your inter-city travel across the country.")}
+             </p>
              
-             {/* Search Form */}
-             <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md w-full p-3 rounded-2xl shadow-2xl flex flex-col md:flex-row gap-3 border border-white/20">
-                <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
-                  <MapPin className="w-5 h-5 text-white/50 mr-3" />
-                  <div className="flex-1 w-full">
-                    <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">{t("buses.origin", "Origin")}</p>
+             {/* Search Form - Expanded and Comfortable */}
+             <form onSubmit={handleSearch} className="bg-white/15 backdrop-blur-xl w-full p-4 rounded-[2rem] shadow-2xl flex flex-col lg:flex-row gap-4 border border-white/20">
+                <div className="flex-[1.5] relative flex items-center bg-white/10 rounded-2xl px-6 py-4 border border-transparent focus-within:border-accent transition-all group">
+                  <MapPin className="w-6 h-6 text-white/50 mr-4 group-focus-within:text-accent transition-colors" />
+                  <div className="flex-1 w-full text-left">
+                    <p className="text-xs uppercase font-bold text-white/50 tracking-widest mb-1">{t("buses.origin", "Origin")}</p>
                     <DestinationAutocomplete 
                       value={origin} 
                       onChange={setOrigin} 
                       hideIcon
-                      inputClassName="!bg-transparent !border-none !outline-none !shadow-none !px-0 flex items-center font-bold text-white placeholder:text-white/30 h-8"
+                      inputClassName="!bg-transparent !border-none !outline-none !shadow-none !px-0 flex items-center font-bold text-xl text-white placeholder:text-white/30 h-10 w-full"
                       className="w-full text-black"
+                      placeholder="Departure City"
                     />
                   </div>
                 </div>
 
-                <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
-                  <MapPin className="w-5 h-5 text-accent mr-3" />
-                  <div className="flex-1 w-full">
-                    <p className="text-[10px] uppercase font-bold text-accent tracking-wider mb-0.5">{t("buses.destination", "Destination")}</p>
+                <div className="flex-[1.5] relative flex items-center bg-white/10 rounded-2xl px-6 py-4 border border-transparent focus-within:border-accent transition-all group">
+                  <MapPin className="w-6 h-6 text-accent mr-4" />
+                  <div className="flex-1 w-full text-left">
+                    <p className="text-xs uppercase font-bold text-accent tracking-widest mb-1">{t("buses.destination", "Destination")}</p>
                     <DestinationAutocomplete 
                       value={dest} 
                       onChange={setDest} 
                       hideIcon
-                      inputClassName="!bg-transparent !border-none !outline-none !shadow-none !px-0 flex items-center font-bold text-white placeholder:text-white/30 h-8"
+                      inputClassName="!bg-transparent !border-none !outline-none !shadow-none !px-0 flex items-center font-bold text-xl text-white placeholder:text-white/30 h-10 w-full"
                       className="w-full text-black"
+                      placeholder="Destination City"
                     />
                   </div>
                 </div>
 
-                <div className="flex-1 relative flex items-center bg-white/5 rounded-xl px-4 py-2 border border-transparent focus-within:border-accent transition-colors">
-                  <Calendar className="w-5 h-5 text-white/50 mr-3" />
-                  <div className="flex-1">
-                     <p className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-0.5">{t("buses.date", "Pickup Date")}</p>
-                     <input type="date" className="w-full bg-transparent border-none outline-none font-bold text-white text-sm" defaultValue={new Date().toISOString().split('T')[0]} required />
+                <div className="flex-1 relative flex items-center bg-white/10 rounded-2xl px-6 py-4 border border-transparent focus-within:border-accent transition-all group">
+                  <Calendar className="w-6 h-6 text-white/50 mr-4 group-focus-within:text-accent transition-colors" />
+                  <div className="flex-1 text-left">
+                     <p className="text-xs uppercase font-bold text-white/50 tracking-widest mb-1">{t("buses.date", "Travel Date")}</p>
+                     <input type="date" className="w-full bg-transparent border-none outline-none font-bold text-white text-lg h-10" defaultValue={new Date().toISOString().split('T')[0]} required />
                   </div>
                 </div>
 
-                <Button type="submit" disabled={loading} className="md:w-32 h-auto py-4 rounded-xl bg-accent text-accent-foreground shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
-                  {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Search className="w-6 h-6" />}
+                <Button type="submit" disabled={loading} className="lg:w-40 h-auto py-6 rounded-2xl bg-accent text-accent-foreground shadow-lg hover:shadow-accent/40 hover:-translate-y-1 transition-all">
+                  {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div> : <><Search className="w-7 h-7 mr-2" /> Search</>}
                 </Button>
              </form>
            </motion.div>

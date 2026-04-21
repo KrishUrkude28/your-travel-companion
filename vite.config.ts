@@ -34,7 +34,6 @@ export default defineConfig(({ mode }) => ({
           "vendor-motion": ["framer-motion"],
           "vendor-ui": ["@radix-ui/react-dropdown-menu", "@radix-ui/react-dialog", "@radix-ui/react-accordion"],
           "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-map": ["leaflet"],
         },
       },
     },

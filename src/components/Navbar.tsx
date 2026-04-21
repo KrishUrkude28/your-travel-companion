@@ -81,9 +81,11 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <MapPin className="h-5 w-5 text-accent" />
-          <span className="font-display text-lg font-bold text-foreground">
+        <Link to="/" className="flex items-center gap-3 shrink-0 group">
+          <div className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-accent/20 group-hover:border-accent/40 transition-colors">
+            <img src="/logo.png" alt="TravelSathi Logo" className="w-full h-full object-cover" />
+          </div>
+          <span className="font-display text-xl font-bold text-foreground tracking-tight">
             Travel<span className="text-accent">Sathi</span>
           </span>
         </Link>

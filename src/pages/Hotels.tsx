@@ -180,8 +180,13 @@ const Hotels = () => {
                   className="bg-card rounded-2xl border border-border shadow-sm flex flex-col md:flex-row overflow-hidden hover:shadow-card transition-all"
                 >
                   {/* Image */}
-                  <div className="md:w-1/3 h-56 md:h-auto overflow-hidden">
-                    <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" />
+                  <div className="md:w-1/3 h-56 md:h-auto overflow-hidden bg-muted">
+                    <img 
+                      src={hotel.img.replace('w=800', 'w=600').replace('q=80', 'q=70&auto=format')} 
+                      alt={hotel.name} 
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform hover:scale-105 duration-500" 
+                    />
                   </div>
 
                   {/* Details */}

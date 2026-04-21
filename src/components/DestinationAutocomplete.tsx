@@ -38,8 +38,18 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const cacheRef = useRef<Record<string, Suggestion[]>>({});
+
   const fetchSuggestions = async (query: string) => {
     if (query.length < 2) { setSuggestions([]); setOpen(false); return; }
+    
+    // Check Cache
+    if (cacheRef.current[query]) {
+      setSuggestions(cacheRef.current[query]);
+      setOpen(cacheRef.current[query].length > 0);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(
@@ -47,7 +57,6 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
       );
       const data = await res.json();
       
-      // Programmatic filter for India-only locations
       const results: Suggestion[] = (data.results || [])
         .filter((r: any) => r.country === "India" || r.country_code === "IN")
         .slice(0, 6)
@@ -59,6 +68,9 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
           longitude: r.longitude,
         }));
         
+      // Update Cache
+      cacheRef.current[query] = results;
+      
       setSuggestions(results);
       setOpen(results.length > 0);
     } catch {

@@ -30,33 +30,46 @@ const PackagesSection = () => {
           {packages.map((pkg, i) => (
             <motion.div
               key={pkg.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              initial={{ opacity: 1, y: 10 }}
+              animate={{ y: 0 }}
               transition={{ delay: i * 0.15 }}
               className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-elevated transition-all duration-300 group relative"
             >
               <div className="absolute top-4 right-4 z-10">
                 <WishlistButton packageId={pkg.id} packageTitle={pkg.title} />
               </div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              
+              {/* Package Image */}
+              <div className="relative h-48 overflow-hidden">
+                <img 
+                  src={pkg.heroImage} 
+                  alt={pkg.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-3 left-4">
+                  <span className="px-3 py-1 rounded-full bg-accent text-accent-foreground text-[10px] font-bold uppercase tracking-wider">
                     {pkg.type}
                   </span>
-                  <div className="text-right">
-                    <p className="text-muted-foreground text-xs line-through">{formatPrice(pkg.originalPrice)}</p>
-                    <p className="text-foreground font-bold text-xl">{formatPrice(pkg.price)}</p>
-                  </div>
                 </div>
+              </div>
 
-                <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                  {pkg.title}
-                </h3>
-
-                <div className="flex items-center gap-1 text-muted-foreground text-sm mb-4">
-                  <MapPin className="h-4 w-4 text-accent" />
-                  <span>{pkg.destinations}</span>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-foreground mb-1">
+                      {pkg.title}
+                    </h3>
+                    <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                      <MapPin className="h-3 w-3 text-accent" />
+                      <span>{pkg.destinations}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-muted-foreground text-[10px] line-through">{formatPrice(pkg.originalPrice)}</p>
+                    <p className="text-primary font-bold text-lg">{formatPrice(pkg.price)}</p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-4 text-muted-foreground text-sm mb-5">

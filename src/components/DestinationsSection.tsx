@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { MapPin, Star } from "lucide-react";
 
 const destinations = [
-  { name: "Manali", country: "India", rating: 4.8, price: "₹8,999", tag: "Adventure", image: "/destinations/manali.png" },
-  { name: "Goa", country: "India", rating: 4.7, price: "₹6,499", tag: "Beach", image: "/destinations/goa.png" },
-  { name: "Varanasi", country: "India", rating: 4.9, price: "₹4,999", tag: "Spiritual", image: "/destinations/varanasi.png" },
-  { name: "Kerala", country: "India", rating: 4.8, price: "₹11,999", tag: "Backwaters", image: "/destinations/kerala.png" },
+  { name: "Manali", country: "India", rating: 4.8, price: "₹8,999", tag: "Adventure", image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80" },
+  { name: "Goa", country: "India", rating: 4.7, price: "₹6,499", tag: "Beach", image: "https://images.unsplash.com/photo-1512789172734-8b688198b29a?auto=format&fit=crop&w=800&q=80" },
+  { name: "Varanasi", country: "India", rating: 4.9, price: "₹4,999", tag: "Spiritual", image: "https://images.unsplash.com/photo-1555215695-1991763789a5?auto=format&fit=crop&w=800&q=80" },
+  { name: "Kerala", country: "India", rating: 4.8, price: "₹11,999", tag: "Backwaters", image: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80" },
 ];
 
 const DestinationsSection = () => {
@@ -14,8 +14,7 @@ const DestinationsSection = () => {
       <div className="container mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-10 sm:mb-16"
         >
@@ -27,10 +26,9 @@ const DestinationsSection = () => {
           {destinations.map((dest, i) => (
             <motion.div
               key={dest.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
+              initial={{ opacity: 1, y: 10 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
               className="group cursor-pointer min-w-[280px] sm:min-w-0 snap-center"
             >
               <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[3/4] shadow-card group-hover:shadow-elevated transition-shadow duration-300">

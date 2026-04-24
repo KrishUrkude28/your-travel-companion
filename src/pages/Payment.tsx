@@ -84,13 +84,17 @@ const Payment = () => {
         status: "confirmed",
       });
     }
-    await supabase.from("payments").insert({
-      razorpay_payment_id: `pay_test_${Date.now()}`,
-      amount,
-      status: "success",
-      user_id: user.id,
-      booking_id,
-    });
+    try {
+      await supabase.from("payments").insert({
+        razorpay_payment_id: `pay_test_${Date.now()}`,
+        amount,
+        status: "success",
+        user_id: user.id,
+        booking_id,
+      });
+    } catch (err: any) {
+      console.info("Payment record skipped (Database table 'payments' not yet created). Process continuing in Demo Mode.");
+    }
   };
 
   const handlePayment = async () => {
@@ -121,13 +125,17 @@ const Payment = () => {
         },
         theme: { color: "#6366f1" },
         handler: async (response: any) => {
-          await supabase.from("payments").insert({
-            razorpay_payment_id: response.razorpay_payment_id,
-            amount,
-            status: "success",
-            user_id: user?.id,
-            booking_id,
-          });
+          try {
+            await supabase.from("payments").insert({
+              razorpay_payment_id: response.razorpay_payment_id,
+              amount,
+              status: "success",
+              user_id: user?.id,
+              booking_id,
+            });
+          } catch (err) {
+            console.warn("Could not record payment to database:", err);
+          }
           await recordBooking();
           setSuccess(true);
           setLoading(false);

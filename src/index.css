@@ -187,14 +187,6 @@ img {
   transition: opacity 0.3s ease;
 }
 
-img[loading="lazy"] {
-  opacity: 0;
-}
-
-img[loading="lazy"].loaded {
-  opacity: 1;
-}
-
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;

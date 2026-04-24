@@ -64,8 +64,14 @@ const PackageDetail = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.warn("Reviews fetch error (col might be missing):", error);
-        // Fallback to static reviews if DB column is missing
+        // If the table is missing or columns are wrong, we use the fallback
+        if (error.code === "PGRST116" || error.code === "42P01") {
+          console.info("Using simulated reviews (Database table 'reviews' not yet created).");
+        } else {
+          console.warn("Reviews fetch error:", error);
+        }
+        
+        // Fallback to static reviews
         setReviews([
           { id: 1, rating: 5, comment: "Absolutely incredible experience! Everything was perfectly organized.", profiles: { display_name: "Rahul Sharma", avatar_url: "" }, created_at: new Date().toISOString() },
           { id: 2, rating: 4, comment: "Great trip, hotels were top-notch. Wish we had one more day in the mountains.", profiles: { display_name: "Anjali Gupta", avatar_url: "" }, created_at: new Date(Date.now() - 86400000).toISOString() }
@@ -74,7 +80,7 @@ const PackageDetail = () => {
         setReviews(data || []);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Critical error fetching reviews:", err);
     } finally {
       setLoadingReviews(false);
     }

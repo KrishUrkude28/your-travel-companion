@@ -57,17 +57,67 @@ const DestinationAutocomplete = ({ value, onChange, placeholder = "e.g. Rajastha
       );
       const data = await res.json();
       
-      const results: Suggestion[] = (data.results || [])
-        .filter((r: any) => r.country === "India" || r.country_code === "IN")
-        .slice(0, 6)
-        .map((r: any) => ({
-          name: r.name,
-          country: r.country,
-          admin1: r.admin1,
-          latitude: r.latitude,
-          longitude: r.longitude,
-        }));
+      const rawResults = (data.results || []).filter((r: any) => r.country === "India" || r.country_code === "IN");
+      const queryLower = query.toLowerCase();
+
+      // Weighted scoring for better relevance
+      rawResults.sort((a: any, b: any) => {
+        const getScore = (r: any) => {
+          let score = 0;
+          const nameLower = r.name.toLowerCase();
+          const adminLower = (r.admin1 || "").toLowerCase();
+          
+          // 1. Exact Name Match (Highest priority)
+          if (nameLower === queryLower) score += 500;
+          
+          // 2. State Match (If they type a state name, show the state first)
+          if (adminLower === queryLower && r.feature_code === "ADM1") score += 400;
+          
+          // 3. Feature Code Priority
+          const featureScores: Record<string, number> = {
+            'ADM1': 100, // State
+            'PPLC': 90,  // Capital
+            'PPLA': 80,  // Admin City
+            'PPLA2': 60,
+            'PPL': 30
+          };
+          score += featureScores[r.feature_code as string] || 0;
+          
+          // 4. Tourist Hub Boosting
+          const touristStates = ["goa", "himachal pradesh", "rajasthan", "kerala", "uttarakhand", "jammu and kashmir", "sikkim", "ladakh"];
+          if (touristStates.includes(adminLower)) score += 50;
+
+          // 5. Population (Logarithmic scale)
+          if (r.population) score += Math.log10(r.population) * 10;
+          
+          return score;
+        };
+
+        return getScore(b) - getScore(a);
+      });
+
+      const uniqueResults: Suggestion[] = [];
+      const seen = new Set();
+
+      rawResults.forEach((r: any) => {
+        const name = r.name;
+        const state = r.admin1 || "";
+        const key = `${name}|${state}`.toLowerCase();
         
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueResults.push({
+            name: r.name,
+            country: r.country,
+            admin1: r.admin1,
+            latitude: r.latitude,
+            longitude: r.longitude,
+          });
+        }
+      });
+        
+      const results = uniqueResults.slice(0, 6);
+      
       // Update Cache
       cacheRef.current[query] = results;
       

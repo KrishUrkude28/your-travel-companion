@@ -90,7 +90,13 @@ export const useFlightSearch = () => {
       setLoading(false);
       return liveFlights;
     } catch (err: any) {
-      console.warn("Live API Failed. Using simulation for demo.", err);
+      if (err.status === 429) {
+        console.warn("RapidAPI Rate Limit Reached (429). Switching to simulated data.");
+      } else if (err.status === 403) {
+        console.error("RapidAPI Key Invalid or Expired (403). Using demo data.");
+      } else {
+        console.warn("Live Flight API Failed. Using simulation for demo.", err);
+      }
       
       // Simulate delay for demo feel
       await new Promise(resolve => setTimeout(resolve, 1000));

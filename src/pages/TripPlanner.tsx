@@ -210,6 +210,9 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
 
       if (!groqRes.ok) {
         const errData = await groqRes.json().catch(() => ({}));
+        if (groqRes.status === 401) {
+          throw new Error("Invalid Groq API Key (401). Please check VITE_GROQ_API_KEY in your .env file.");
+        }
         throw new Error(errData.error?.message || `Groq API Error: ${groqRes.statusText}`);
       }
 

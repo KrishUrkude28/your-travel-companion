@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { MapPin, Star } from "lucide-react";
 
 const destinations = [
-  { name: "Manali", country: "India", rating: 4.8, price: "₹8,999", tag: "Adventure", image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80" },
-  { name: "Goa", country: "India", rating: 4.7, price: "₹6,499", tag: "Beach", image: "https://images.unsplash.com/photo-1512789172734-8b688198b29a?auto=format&fit=crop&w=800&q=80" },
-  { name: "Varanasi", country: "India", rating: 4.9, price: "₹4,999", tag: "Spiritual", image: "https://images.unsplash.com/photo-1555215695-1991763789a5?auto=format&fit=crop&w=800&q=80" },
-  { name: "Kerala", country: "India", rating: 4.8, price: "₹11,999", tag: "Backwaters", image: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80" },
+  { name: "Manali", country: "India", rating: 4.8, price: "₹8,999", tag: "Adventure", image: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80" },
+  { name: "Goa", country: "India", rating: 4.7, price: "₹6,499", tag: "Beach", image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80" },
+  { name: "Varanasi", country: "India", rating: 4.9, price: "₹4,999", tag: "Spiritual", image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80" },
+  { name: "Kerala", country: "India", rating: 4.8, price: "₹11,999", tag: "Backwaters", image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80" },
 ];
 
 const DestinationsSection = () => {

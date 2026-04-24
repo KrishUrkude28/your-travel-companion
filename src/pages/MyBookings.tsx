@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Calendar, Users, Clock, X, RefreshCw } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Clock, X, RefreshCw, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -11,6 +11,8 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import ReviewModal from "@/components/ReviewModal";
 
 interface Booking {
   id: string;
@@ -25,9 +27,11 @@ interface Booking {
 
 const MyBookings = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [reviewingBooking, setReviewingBooking] = useState<Booking | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [pullProgress, setPullProgress] = useState(0);
   const [startY, setStartY] = useState(0);
@@ -157,11 +161,11 @@ const MyBookings = () => {
       <div className="container mx-auto px-6">
         <Link to="/">
           <Button variant="ghost" size="sm" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
+            <ArrowLeft className="h-4 w-4 mr-2" /> {t("nav.back", "Back to Home")}
           </Button>
         </Link>
 
-        <h1 className="font-display text-3xl font-bold text-foreground mb-8">My Bookings</h1>
+        <h1 className="font-display text-3xl font-bold text-foreground mb-8">{t("myBookings.title", "My Bookings")}</h1>
 
         {bookings.length === 0 ? (
           <motion.div
@@ -169,9 +173,9 @@ const MyBookings = () => {
             animate={{ opacity: 1 }}
             className="text-center py-16"
           >
-            <p className="text-muted-foreground mb-4">You haven't made any bookings yet.</p>
+            <p className="text-muted-foreground mb-4">{t("myBookings.no_bookings", "You haven't made any bookings yet.")}</p>
             <Link to="/#packages">
-              <Button className="bg-primary text-primary-foreground">Browse Packages</Button>
+              <Button className="bg-primary text-primary-foreground">{t("myBookings.browse", "Browse Packages")}</Button>
             </Link>
           </motion.div>
         ) : (
@@ -201,11 +205,11 @@ const MyBookings = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    <span>{booking.travelers} traveler{booking.travelers > 1 ? "s" : ""}</span>
+                    <span>{booking.travelers} {t("myBookings.travelers", "travelers")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>Booked {new Date(booking.created_at).toLocaleDateString("en-IN")}</span>
+                    <span>{t("myBookings.booked", "Booked")} {new Date(booking.created_at).toLocaleDateString("en-IN")}</span>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
@@ -219,7 +223,7 @@ const MyBookings = () => {
                     } 
                     className="flex-1"
                   >
-                    <Button variant="outline" size="sm" className="w-full">View</Button>
+                    <Button variant="outline" size="sm" className="w-full">{t("myBookings.view", "View")}</Button>
                   </Link>
                   {booking.status === "pending" && (
                     <AlertDialog>
@@ -230,28 +234,38 @@ const MyBookings = () => {
                           className="text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
                           disabled={cancellingId === booking.id}
                         >
-                          <X className="h-4 w-4 mr-1" /> Cancel
+                          <X className="h-4 w-4 mr-1" /> {t("myBookings.cancel", "Cancel")}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("myBookings.cancel_title", "Cancel this booking?")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Your booking for <strong>{booking.package_title}</strong> on{" "}
-                            {new Date(booking.travel_date).toLocaleDateString("en-IN", { dateStyle: "long" })} will be cancelled. This action cannot be undone.
+                            {t("myBookings.cancel_desc", "Your booking will be cancelled. This action cannot be undone.")}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Keep booking</AlertDialogCancel>
+                          <AlertDialogCancel>{t("myBookings.keep", "Keep booking")}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleCancel(booking.id)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            Yes, cancel
+                            {t("myBookings.yes_cancel", "Yes, cancel")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                  )}
+                  {/* Leave a Review (Phase 2 Feature) */}
+                  {booking.status === "confirmed" && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 hover:text-primary font-semibold"
+                      onClick={() => setReviewingBooking(booking)}
+                    >
+                      <Star className="h-4 w-4 mr-1" /> {t("myBookings.review", "Review")}
+                    </Button>
                   )}
                   {/* Phase 2 Feature: Team Expense Tripper (Split Bill) */}
                   {booking.status === "confirmed" && booking.travelers > 1 && (
@@ -270,7 +284,7 @@ const MyBookings = () => {
                           }
                        }}
                      >
-                       Split Bill
+                       {t("myBookings.split_bill", "Split Bill")}
                      </Button>
                   )}
                 </div>
@@ -279,6 +293,12 @@ const MyBookings = () => {
           </div>
         )}
       </div>
+
+      <ReviewModal 
+        isOpen={!!reviewingBooking} 
+        onClose={() => setReviewingBooking(null)} 
+        booking={reviewingBooking} 
+      />
     </div>
   );
 };

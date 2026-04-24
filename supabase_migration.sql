@@ -19,6 +19,17 @@ CREATE TABLE IF NOT EXISTS public.reviews (
     comment TEXT
 );
 
+-- Add missing columns for reviews (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='user_name') THEN
+        ALTER TABLE public.reviews ADD COLUMN user_name TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='package_title') THEN
+        ALTER TABLE public.reviews ADD COLUMN package_title TEXT;
+    END IF;
+END $$;
+
 -- 3. Enable RLS
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;

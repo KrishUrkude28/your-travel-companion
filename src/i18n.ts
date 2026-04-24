@@ -141,6 +141,21 @@ const resources = {
           highlights: "Highlights",
           travel_tips: "Travel Tips"
         }
+      },
+      myBookings: {
+        title: "My Bookings",
+        no_bookings: "You haven't made any bookings yet.",
+        browse: "Browse Packages",
+        view: "View",
+        cancel: "Cancel",
+        review: "Review",
+        split_bill: "Split Bill",
+        keep: "Keep booking",
+        yes_cancel: "Yes, cancel",
+        cancel_title: "Cancel this booking?",
+        cancel_desc: "Your booking will be cancelled. This action cannot be undone.",
+        travelers: "travelers",
+        booked: "Booked"
       }
     }
   },
@@ -282,6 +297,21 @@ const resources = {
           highlights: "मुख्य आकर्षण",
           travel_tips: "यात्रा के टिप्स"
         }
+      },
+      myBookings: {
+        title: "मेरी बुकिंग",
+        no_bookings: "आपने अभी तक कोई बुकिंग नहीं की है।",
+        browse: "पैकेज ब्राउज़ करें",
+        view: "देखें",
+        cancel: "रद्द करें",
+        review: "समीक्षा दें",
+        split_bill: "बिल बांटें",
+        keep: "बुकिंग रखें",
+        yes_cancel: "हाँ, रद्द करें",
+        cancel_title: "क्या इस बुकिंग को रद्द करें?",
+        cancel_desc: "आपकी बुकिंग रद्द कर दी जाएगी। यह क्रिया पूर्ववत नहीं की जा सकती।",
+        travelers: "यात्री",
+        booked: "बुक किया गया"
       }
     }
   }

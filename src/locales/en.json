@@ -1,0 +1,24 @@
+{
+  "nav": {
+    "home": "Home",
+    "packages": "Packages",
+    "about": "About",
+    "contact": "Contact",
+    "signIn": "Sign In",
+    "planner": "Trip Planner",
+    "myBookings": "My Bookings"
+  },
+  "hero": {
+    "badge": "✨ AI-Powered Travel Planning",
+    "title1": "Your Ultimate",
+    "titleHighlight": "Travel Companion",
+    "subtitle": "Discover personalized itineraries, book seamless experiences, and explore the world with our intelligent travel assistant.",
+    "cta": "Plan Your Trip Now"
+  },
+  "footer": {
+    "desc": "Your intelligent travel companion for personalized journeys.",
+    "quickLinks": "Quick Links",
+    "contact": "Contact Info",
+    "rights": "© 2024 TravelSathi AI. All rights reserved."
+  }
+}

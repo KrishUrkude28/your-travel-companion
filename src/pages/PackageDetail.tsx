@@ -43,6 +43,16 @@ const PackageDetail = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        name: user.user_metadata?.full_name || user.user_metadata?.display_name || "",
+        email: user.email || ""
+      }));
+    }
+  }, [user]);
+
   const fetchReviews = async () => {
     setLoadingReviews(true);
     try {
@@ -109,6 +119,18 @@ const PackageDetail = () => {
   const total = pkg.costBreakdown.reduce((s, c) => s + c.amount, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      toast({ 
+        title: "Authentication Required", 
+        description: "Please sign in to book this package.", 
+        variant: "destructive" 
+      });
+      navigate("/auth");
+      return;
+    }
+
     // Validation
     const isIndian = form.phone.startsWith("+91") || /^[6-9]\d{9}$/.test(form.phone);
     if (!isIndian && !form.passportNumber) {
@@ -419,12 +441,18 @@ const PackageDetail = () => {
                 </div>
                 <div className="space-y-4">
                     <div>
-                        <Label htmlFor="phone" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Phone Number</Label>
-                        <Input id="phone" required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 ..." className="bg-muted/50 border-none h-12 rounded-xl" />
+                        <Label htmlFor="email" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Email Address</Label>
+                        <Input id="email" required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" className="bg-muted/50 border-none h-12 rounded-xl" />
                     </div>
-                    <div>
-                        <Label htmlFor="passport" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Passport Number {!(form.phone.startsWith("+91") || /^[6-9]\d{9}$/.test(form.phone)) && <span className="text-destructive">*</span>}</Label>
-                        <Input id="passport" value={form.passportNumber} onChange={(e) => setForm({ ...form, passportNumber: e.target.value })} placeholder="Required for Int'l Travel" className="bg-muted/50 border-none h-12 rounded-xl" />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label htmlFor="phone" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Phone Number</Label>
+                            <Input id="phone" required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 ..." className="bg-muted/50 border-none h-12 rounded-xl" />
+                        </div>
+                        <div>
+                            <Label htmlFor="passport" className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Passport Number {!(form.phone.startsWith("+91") || /^[6-9]\d{9}$/.test(form.phone)) && <span className="text-destructive">*</span>}</Label>
+                            <Input id="passport" value={form.passportNumber} onChange={(e) => setForm({ ...form, passportNumber: e.target.value })} placeholder="Required for Int'l Travel" className="bg-muted/50 border-none h-12 rounded-xl text-sm" />
+                        </div>
                     </div>
                 </div>
                 <Button type="submit" className="w-full h-14 rounded-2xl text-lg font-black bg-primary text-primary-foreground hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow" disabled={submitting}>

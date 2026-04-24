@@ -109,3 +109,40 @@ CREATE POLICY "Users can insert into their own wishlist" ON public.wishlists FOR
 
 DROP POLICY IF EXISTS "Users can delete from their own wishlist" ON public.wishlists;
 CREATE POLICY "Users can delete from their own wishlist" ON public.wishlists FOR DELETE USING (auth.uid() = user_id);
+
+-- 9. Create 'trip_plans' table for AI Itineraries
+CREATE TABLE IF NOT EXISTS public.trip_plans (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    destination TEXT NOT NULL,
+    duration TEXT NOT NULL,
+    budget TEXT NOT NULL,
+    travelers INTEGER DEFAULT 1,
+    interests TEXT[] DEFAULT '{}',
+    requirements TEXT,
+    generated_itinerary JSONB NOT NULL
+);
+
+ALTER TABLE public.trip_plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own trip plans" ON public.trip_plans;
+CREATE POLICY "Users can view their own trip plans" ON public.trip_plans FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own trip plans" ON public.trip_plans;
+CREATE POLICY "Users can insert their own trip plans" ON public.trip_plans FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own trip plans" ON public.trip_plans;
+CREATE POLICY "Users can delete their own trip plans" ON public.trip_plans FOR DELETE USING (auth.uid() = user_id);
+
+-- 10. Create Storage Bucket for 'itineraries' PDF files
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('itineraries', 'itineraries', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage bucket policies
+DROP POLICY IF EXISTS "Anyone can read itineraries" ON storage.objects;
+CREATE POLICY "Anyone can read itineraries" ON storage.objects FOR SELECT USING (bucket_id = 'itineraries');
+
+DROP POLICY IF EXISTS "Authenticated users can upload itineraries" ON storage.objects;
+CREATE POLICY "Authenticated users can upload itineraries" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'itineraries' AND auth.role() = 'authenticated');

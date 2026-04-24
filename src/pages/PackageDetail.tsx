@@ -18,7 +18,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoGallery from "@/components/PhotoGallery";
 import WishlistButton from "@/components/WishlistButton";
-
+import PaymentModal from "@/components/PaymentModal";
 const PackageDetail = () => {
   const { id } = useParams<{ id: string }>();
   const pkg = packages.find((p) => p.id === id);
@@ -124,15 +124,13 @@ const PackageDetail = () => {
 
   const total = pkg.costBreakdown.reduce((s, c) => s + c.amount, 0);
 
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
-      toast({ 
-        title: "Authentication Required", 
-        description: "Please sign in to book this package.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Authentication Required", description: "Please sign in to book this package.", variant: "destructive" });
       navigate("/auth");
       return;
     }
@@ -140,11 +138,7 @@ const PackageDetail = () => {
     // Validation
     const isIndian = form.phone.startsWith("+91") || /^[6-9]\d{9}$/.test(form.phone);
     if (!isIndian && !form.passportNumber) {
-      toast({ 
-        title: "Information Required", 
-        description: "Please provide a Passport Number for international bookings or use an Indian (+91) number.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Information Required", description: "Please provide a Passport Number for international bookings or use an Indian (+91) number.", variant: "destructive" });
       return;
     }
 
@@ -156,10 +150,16 @@ const PackageDetail = () => {
        return;
     }
 
+    // Instead of booking directly, show payment modal
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = async (paymentId: string) => {
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("bookings").insert({
-        user_id: user.id,
+      // 1. Create Booking
+      const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
+        user_id: user!.id,
         package_id: pkg.id,
         package_title: pkg.title,
         full_name: form.name,
@@ -169,22 +169,31 @@ const PackageDetail = () => {
         travel_date: form.date,
         message: form.message || null,
         passport_number: form.passportNumber || null,
-        status: 'pending'
+        status: 'confirmed' // Confirmed since payment succeeded
+      }).select().single();
+
+      if (bookingError) throw bookingError;
+
+      // 2. Create Payment Record
+      const { error: paymentError } = await supabase.from("payments").insert({
+        user_id: user!.id,
+        booking_id: bookingData.id,
+        amount: total,
+        status: 'completed',
+        razorpay_payment_id: paymentId
       });
 
-      if (error) throw error;
+      if (paymentError) throw paymentError;
 
       toast({ 
-        title: "Booking Request Sent!", 
-        description: "A confirmation email simulation has been sent to " + form.email 
+        title: "Booking Confirmed!", 
+        description: "Your payment was successful and your trip is booked. A confirmation email simulation has been sent." 
       });
 
-      // Simulation of email dispatch
       console.log(`[EMAIL SIM] To: ${form.email} - Subject: Booking Confirmation for ${pkg.title}`);
-      
       setForm({ name: "", email: "", phone: "", travelers: "2", date: "", message: "", passportNumber: "" });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to submit booking", variant: "destructive" });
+      toast({ title: "Booking Error", description: err.message || "Failed to finalize booking.", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -487,6 +496,13 @@ const PackageDetail = () => {
           </div>
         </div>
       </div>
+      <PaymentModal 
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={total}
+        title={pkg.title}
+      />
     </div>
   );
 };

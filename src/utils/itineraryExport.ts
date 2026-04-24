@@ -24,35 +24,76 @@ export const generateWhatsAppLink = (trip: any, itinerary: any) => {
 /**
  * Exports a specific DOM element to PDF using html2canvas and jsPDF
  */
-export const exportToPDF = async (elementId: string, filename: string) => {
-  const element = document.getElementById(elementId);
+export const exportToPDF = async (elementOrId: string | HTMLElement, filename: string) => {
+  const element = typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;
   if (!element) return;
 
-  // Add a print-mode class temporarily
-  const originalStyle = element.getAttribute('style') || '';
+  // Create a professional template wrapper off-screen
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'absolute';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '800px';
+  wrapper.style.backgroundColor = '#ffffff';
+  wrapper.style.backgroundImage = 'radial-gradient(#e2e8f0 1px, transparent 1px)';
+  wrapper.style.backgroundSize = '20px 20px';
+  wrapper.style.color = '#000000';
+  wrapper.style.fontFamily = 'Inter, sans-serif';
+  wrapper.style.padding = '40px';
+  wrapper.style.boxSizing = 'border-box';
   
+  // Professional Header
+  const header = document.createElement('div');
+  header.innerHTML = `
+    <div style="display: flex; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px;">
+      <img src="/logo.png" alt="TravelSathi Logo" style="width: 48px; height: auto; margin-right: 15px;" />
+      <div>
+        <h1 style="margin: 0; font-size: 26px; font-weight: bold; color: #0f172a;">TravelSathi AI</h1>
+        <p style="margin: 0; font-size: 14px; color: #64748b;">Your AI Travel Companion • Itinerary Document</p>
+      </div>
+    </div>
+  `;
+  wrapper.appendChild(header);
+
+  // Content
+  const content = document.createElement('div');
+  content.innerHTML = element.innerHTML;
+  
+  // Remove action buttons and inputs from content
+  const actionButtons = content.querySelectorAll('button, input, textarea, .itinerary-actions');
+  actionButtons.forEach(btn => btn.remove());
+  
+  // Force clean styles for print
+  const allElements = content.querySelectorAll('*');
+  allElements.forEach((el: any) => {
+    el.style.color = '#000000';
+    // If it has a background, make it transparent or light
+    if (el.tagName !== 'IMG') {
+       el.style.backgroundColor = 'transparent';
+    }
+  });
+
+  wrapper.appendChild(content);
+  
+  // Professional Footer
+  const footer = document.createElement('div');
+  footer.innerHTML = `
+    <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; color: #64748b; font-size: 12px; font-weight: 500;">
+      Generated securely by TravelSathi AI • Plan your next adventure at travelsathi.com
+    </div>
+  `;
+  wrapper.appendChild(footer);
+
+  document.body.appendChild(wrapper);
+
   try {
-    const canvas = await html2canvas(element, {
+    const canvas = await html2canvas(wrapper, {
       scale: 2, // Higher scale for better quality
       useCORS: true,
-      backgroundColor: '#ffffff', // Force light background for print
-      onclone: (clonedDoc) => {
-        const clonedElement = clonedDoc.getElementById(elementId);
-        if (clonedElement) {
-          // Force light colors for the cloned element
-          clonedElement.style.color = '#000000';
-          clonedElement.style.backgroundColor = '#ffffff';
-          // Find all text elements and force black
-          const textElements = clonedElement.querySelectorAll('h1, h2, h3, h4, p, span, li, div');
-          textElements.forEach((el: any) => {
-            el.style.color = '#000000';
-          });
-          // Hide elements that shouldn't be in PDF (like action buttons)
-          const actionButtons = clonedElement.querySelector('.itinerary-actions');
-          if (actionButtons) actionButtons.setAttribute('style', 'display: none !important');
-        }
-      }
+      backgroundColor: '#ffffff'
     });
+    
+    document.body.removeChild(wrapper);
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({

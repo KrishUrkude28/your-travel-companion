@@ -18,7 +18,7 @@ import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 import BudgetTracker from "@/components/BudgetTracker";
 import { fetchDestinationWeather } from "@/utils/weatherPredictor";
 import { generateWhatsAppLink, exportToPDF, uploadTripItinerary } from "@/utils/itineraryExport";
-
+import PaymentModal from "@/components/PaymentModal";
 
 interface GeneratedDay {
   day: number;
@@ -72,6 +72,7 @@ const TripPlanner = () => {
     requirements: "",
   });
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
 
   // Prefill interests from saved travel preferences
@@ -258,6 +259,45 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
     window.open(link, '_blank');
   };
 
+  const handlePaymentSuccess = async (paymentId: string) => {
+    if (!user || !plan) return;
+    
+    try {
+      const budgetAmount = parseInt(plan.estimatedBudget.replace(/[^0-9]/g, "")) || 50000;
+      
+      const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
+        user_id: user.id,
+        package_id: 'custom-ai-itinerary',
+        package_title: `Custom AI Itinerary: ${plan.title}`,
+        full_name: user.user_metadata?.full_name || "AI Planner User", 
+        email: user.email || "user@example.com",
+        phone: "Not provided",
+        travelers: parseInt(form.travelers) || 1,
+        travel_date: new Date().toISOString().split('T')[0],
+        status: 'confirmed'
+      }).select().single();
+
+      if (bookingError) throw bookingError;
+
+      const { error: paymentError } = await supabase.from("payments").insert({
+        user_id: user.id,
+        booking_id: bookingData.id,
+        amount: budgetAmount,
+        status: 'completed',
+        razorpay_payment_id: paymentId
+      });
+
+      if (paymentError) throw paymentError;
+
+      toast({ 
+        title: "Booking Confirmed!", 
+        description: "Your custom AI itinerary is now booked! Check your bookings dashboard." 
+      });
+    } catch (err: any) {
+      toast({ title: "Booking Error", description: err.message || "Failed to finalize booking.", variant: "destructive" });
+    }
+  };
+
   const downloadAsPDF = async () => {
     if (!plan || !planRef.current) return;
     const blob = await exportToPDF(planRef.current, plan.title || "TravelSathi_Trip");
@@ -421,6 +461,9 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
                   <button onClick={() => setShowBudget(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/10 text-accent border border-accent/30 text-sm font-semibold hover:bg-accent/20 transition-colors">
                     <PiggyBank className="h-4 w-4" /> Track Budget
                   </button>
+                  <button onClick={() => setShowPaymentModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors">
+                    <Navigation className="h-4 w-4" /> Book this Itinerary
+                  </button>
                 </div>
                 <div className="bg-card rounded-2xl p-6 shadow-elevated">
                   <h2 className="font-display text-2xl font-bold text-foreground mb-2">{plan.title}</h2>
@@ -444,30 +487,7 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
                       loading="lazy"
                       allowFullScreen
                       referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GEMINI_API_KEY ? "AIzaSy_MOCK_KEY_REPLACE_FOR_PRODUCTION" : ""}&q=${encodeURIComponent(form.destination)}`}
-                      // Fallback dummy map using OpenStreetMap for local testing without Google Maps API key
-                      srcDoc={`
-                        <html>
-                          <head>
-                            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                            <style>body{margin:0;padding:0;} #map{height: 100vh; width: 100vw;}</style>
-                          </head>
-                          <body>
-                            <div id="map"></div>
-                            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                            <script>
-                               // We simulate a geocoder request using Nominatim to show the real coordinates
-                               fetch("https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(form.destination)}").then(r => r.json()).then(data => {
-                                   if(data && data[0]) {
-                                      var map = L.map('map').setView([data[0].lat, data[0].lon], 11);
-                                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-                                      L.marker([data[0].lat, data[0].lon]).addTo(map).bindPopup("<b>${form.destination.replace(/["']/g, "")}</b><br>AI Trip Location").openPopup();
-                                   }
-                               });
-                            </script>
-                          </body>
-                        </html>
-                      `}
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(form.destination)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
                     ></iframe>
                   </div>
                 </div>
@@ -541,6 +561,16 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
           />
         )}
       </AnimatePresence>
+
+      {plan && (
+        <PaymentModal 
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+          amount={parseInt(plan.estimatedBudget.replace(/[^0-9]/g, "")) || 50000}
+          title={plan.title}
+        />
+      )}
     </div>
   );
 };

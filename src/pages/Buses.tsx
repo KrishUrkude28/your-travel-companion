@@ -162,7 +162,7 @@ const Buses = () => {
                              <p className="text-2xl font-black text-foreground">{formatPrice(bus.price)}</p>
                              <p className="text-xs text-destructive font-semibold">{bus.seats} {t("buses.seats_left", "Seats Left!")}</p>
                            </div>
-                           <Link to={`/payment/bus-${bus.id}`} state={{ amount: bus.price, service: `${bus.operator} - ${bus.type}` }}>
+                           <Link to={`/payment/mock-bus-${bus.id}`} state={{ amount: bus.price, service: `${bus.operator} - ${bus.type}` }}>
                              <Button className="bg-primary text-primary-foreground font-bold px-6 py-6 rounded-xl hover:-translate-y-1 transition-transform">{t("buses.view_seats", "View Seats")}</Button>
                            </Link>
                         </div>

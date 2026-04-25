@@ -224,7 +224,7 @@ const Hotels = () => {
                         <p className="text-xs text-muted-foreground">+ {formatPrice(Math.floor(hotel.price * 0.18))} taxes per night</p>
                       </div>
                       <Button 
-                        onClick={() => navigate(`/payment/hotel-${hotel.id}`, { state: { amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type}` } })}
+                        onClick={() => navigate(`/payment/mock-hotel-${hotel.id}`, { state: { amount: Math.floor(hotel.price * 1.18), service: `${hotel.name} - ${hotel.type}` } })}
                         className="px-8 bg-primary text-primary-foreground rounded-full"
                       >
                         {t("hotels.select_room", "Select Room")}

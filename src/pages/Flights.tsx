@@ -178,7 +178,7 @@ const Flights = () => {
                   <div className="text-3xl font-bold flex items-center text-foreground -mt-2">
                     {formatPrice(flight.price)}
                   </div>
-                  <Link to={`/payment/flight-${flight.flightNo}`} state={{ amount: flight.price, service: `${flight.airline} - ${flight.from} to ${flight.to}` }}>
+                  <Link to={`/payment/mock-flight-${flight.flightNo}`} state={{ amount: flight.price, service: `${flight.airline} - ${flight.from} to ${flight.to}` }}>
                     <Button className="w-full md:w-auto px-8 bg-foreground text-background font-bold hover:bg-foreground/90 transition-transform hover:-translate-y-0.5 shadow-xl">
                        {t("flights.select", "Select")}
                     </Button>

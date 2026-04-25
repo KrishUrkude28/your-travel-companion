@@ -113,8 +113,9 @@ const GuideDetail = () => {
       navigate("/auth");
       return;
     }
-    const mockBookingId = "booking-" + Math.random().toString(36).substring(7);
-    navigate(`/payment/${mockBookingId}`);
+    navigate(`/payment/mock-guide-${id}`, {
+      state: { amount: guide.price_full_day, service: `Guide Booking: ${guide.name}` }
+    });
   };
 
   if (!guide) return <div className="pt-32 text-center">Loading profile...</div>;

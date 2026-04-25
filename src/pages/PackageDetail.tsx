@@ -18,7 +18,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoGallery from "@/components/PhotoGallery";
 import WishlistButton from "@/components/WishlistButton";
-import PaymentModal from "@/components/PaymentModal";
+
 const PackageDetail = () => {
   const { id } = useParams<{ id: string }>();
   const pkg = packages.find((p) => p.id === id);
@@ -124,8 +124,6 @@ const PackageDetail = () => {
 
   const total = pkg.costBreakdown.reduce((s, c) => s + c.amount, 0);
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -150,53 +148,10 @@ const PackageDetail = () => {
        return;
     }
 
-    // Instead of booking directly, show payment modal
-    setShowPaymentModal(true);
-  };
-
-  const handlePaymentSuccess = async (paymentId: string) => {
-    setSubmitting(true);
-    try {
-      // 1. Create Booking
-      const { data: bookingData, error: bookingError } = await supabase.from("bookings").insert({
-        user_id: user!.id,
-        package_id: pkg.id,
-        package_title: pkg.title,
-        full_name: form.name,
-        email: form.email,
-        phone: form.phone,
-        travelers: Number(form.travelers),
-        travel_date: form.date,
-        message: form.message || null,
-        passport_number: form.passportNumber || null,
-        status: 'confirmed' // Confirmed since payment succeeded
-      }).select().single();
-
-      if (bookingError) throw bookingError;
-
-      // 2. Create Payment Record
-      const { error: paymentError } = await supabase.from("payments").insert({
-        user_id: user!.id,
-        booking_id: bookingData.id,
-        amount: total,
-        status: 'completed',
-        razorpay_payment_id: paymentId
-      });
-
-      if (paymentError) throw paymentError;
-
-      toast({ 
-        title: "Booking Confirmed!", 
-        description: "Your payment was successful and your trip is booked. A confirmation email simulation has been sent." 
-      });
-
-      console.log(`[EMAIL SIM] To: ${form.email} - Subject: Booking Confirmation for ${pkg.title}`);
-      setForm({ name: "", email: "", phone: "", travelers: "2", date: "", message: "", passportNumber: "" });
-    } catch (err: any) {
-      toast({ title: "Booking Error", description: err.message || "Failed to finalize booking.", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-    }
+    // Navigate to global payment page
+    navigate(`/payment/mock-package-${pkg.id}`, {
+      state: { amount: total, service: pkg.title }
+    });
   };
 
   const shareOnWhatsApp = () => {
@@ -496,13 +451,6 @@ const PackageDetail = () => {
           </div>
         </div>
       </div>
-      <PaymentModal 
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={handlePaymentSuccess}
-        amount={total}
-        title={pkg.title}
-      />
     </div>
   );
 };

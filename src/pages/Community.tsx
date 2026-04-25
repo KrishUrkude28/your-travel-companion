@@ -7,6 +7,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+interface Comment {
+  id: string;
+  user_name: string;
+  text: string;
+}
+
 interface Post {
   id: string;
   user_name: string;
@@ -15,8 +21,9 @@ interface Post {
   caption: string;
   location: string;
   likes: number;
-  comments_count: number;
+  comments: Comment[];
   created_at: string;
+  isLikedByMe?: boolean;
 }
 
 const mockPosts: Post[] = [
@@ -28,8 +35,12 @@ const mockPosts: Post[] = [
     caption: "The Taj Mahal at sunrise is a spiritual experience. Simply breathtaking! 🏛️✨",
     location: "Agra, India",
     likes: 1240,
-    comments_count: 56,
+    comments: [
+      { id: "c1", user_name: "Priya Singh", text: "Wow, what a click! 😍" },
+      { id: "c2", user_name: "Rahul M", text: "Did you go inside?" }
+    ],
     created_at: new Date().toISOString(),
+    isLikedByMe: false,
   },
   {
     id: "p2",
@@ -39,8 +50,9 @@ const mockPosts: Post[] = [
     caption: "Backwaters of Kerala. Living on a houseboat is the ultimate peace. 🛶🌴",
     location: "Alleppey, Kerala",
     likes: 890,
-    comments_count: 32,
+    comments: [{ id: "c3", user_name: "Anjali K", text: "Kerala is indeed God's own country!" }],
     created_at: new Date(Date.now() - 86400000).toISOString(),
+    isLikedByMe: true,
   },
   {
     id: "p3",
@@ -50,8 +62,9 @@ const mockPosts: Post[] = [
     caption: "Blue city vibes! Jodhpur never fails to amaze with its colors. 💙🏰",
     location: "Jodhpur, Rajasthan",
     likes: 1560,
-    comments_count: 84,
+    comments: [],
     created_at: new Date(Date.now() - 172800000).toISOString(),
+    isLikedByMe: false,
   }
 ];
 
@@ -62,6 +75,9 @@ const Community = () => {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newPost, setNewPost] = useState({ caption: "", location: "", image: "" });
+  
+  const [activeCommentPost, setActiveCommentPost] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     // Simulate fetching from database
@@ -70,6 +86,48 @@ const Community = () => {
       setLoading(false);
     }, 1000);
   }, []);
+
+  const handleLike = (postId: string) => {
+    if (!user) {
+      toast({ title: "Login Required", description: "Please sign in to like posts." });
+      return;
+    }
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        const isLiked = !post.isLikedByMe;
+        return { 
+          ...post, 
+          isLikedByMe: isLiked, 
+          likes: post.likes + (isLiked ? 1 : -1) 
+        };
+      }
+      return post;
+    }));
+  };
+
+  const handleCommentSubmit = (e: React.FormEvent, postId: string) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Login Required", description: "Please sign in to comment." });
+      return;
+    }
+    if (!commentText.trim()) return;
+
+    const newComment: Comment = {
+      id: Date.now().toString(),
+      user_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      text: commentText.trim()
+    };
+
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return { ...post, comments: [...post.comments, newComment] };
+      }
+      return post;
+    }));
+    
+    setCommentText("");
+  };
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,8 +144,9 @@ const Community = () => {
       caption: newPost.caption,
       location: newPost.location,
       likes: 0,
-      comments_count: 0,
+      comments: [],
       created_at: new Date().toISOString(),
+      isLikedByMe: false
     };
 
     setPosts([post, ...posts]);
@@ -147,15 +206,24 @@ const Community = () => {
                 {/* Post Actions */}
                 <div className="p-4">
                   <div className="flex items-center gap-4 mb-3">
-                    <button className="flex items-center gap-1.5 hover:text-accent transition-colors">
-                      <Heart className="h-6 w-6" />
+                    <button 
+                      onClick={() => handleLike(post.id)}
+                      className={`flex items-center gap-1.5 transition-colors ${post.isLikedByMe ? 'text-accent' : 'hover:text-accent'}`}
+                    >
+                      <Heart className="h-6 w-6" fill={post.isLikedByMe ? "currentColor" : "none"} />
                       <span className="text-xs font-bold">{post.likes}</span>
                     </button>
-                    <button className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                    <button 
+                      onClick={() => setActiveCommentPost(activeCommentPost === post.id ? null : post.id)}
+                      className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                    >
                       <MessageCircle className="h-6 w-6" />
-                      <span className="text-xs font-bold">{post.comments_count}</span>
+                      <span className="text-xs font-bold">{post.comments?.length || 0}</span>
                     </button>
-                    <button className="ml-auto hover:text-primary transition-colors">
+                    <button className="ml-auto hover:text-primary transition-colors" onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link Copied!", description: "Share this post with your friends." });
+                    }}>
                       <Share2 className="h-5 w-5" />
                     </button>
                   </div>
@@ -165,9 +233,50 @@ const Community = () => {
                     {post.caption}
                   </p>
                   
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-4">
                     {new Date(post.created_at).toLocaleDateString("en-IN", { month: "long", day: "numeric" })}
                   </p>
+
+                  {/* Comments Section */}
+                  <AnimatePresence>
+                    {(activeCommentPost === post.id || (post.comments && post.comments.length > 0)) && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }} 
+                        animate={{ opacity: 1, height: 'auto' }} 
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-3 pt-3 border-t border-border/50"
+                      >
+                        {post.comments?.map((comment) => (
+                          <div key={comment.id} className="text-sm">
+                            <span className="font-bold mr-2">{comment.user_name}</span>
+                            <span className="text-muted-foreground">{comment.text}</span>
+                          </div>
+                        ))}
+
+                        {activeCommentPost === post.id && (
+                          <form onSubmit={(e) => handleCommentSubmit(e, post.id)} className="flex items-center gap-2 mt-2">
+                            <div className="h-8 w-8 shrink-0 rounded-full bg-muted overflow-hidden">
+                              {user ? (
+                                <img src={"https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80"} alt="You" className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary text-xs"><MapPin className="h-4 w-4" /></div>
+                              )}
+                            </div>
+                            <Input 
+                              type="text" 
+                              placeholder="Add a comment..." 
+                              className="h-8 text-xs border-none bg-muted/50 focus-visible:ring-1"
+                              value={commentText}
+                              onChange={(e) => setCommentText(e.target.value)}
+                            />
+                            <Button type="submit" size="sm" variant="ghost" className="h-8 px-2 text-primary" disabled={!commentText.trim()}>
+                              Post
+                            </Button>
+                          </form>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
             ))}

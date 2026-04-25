@@ -214,18 +214,25 @@ const MyBookings = () => {
                 </div>
                 <div className="flex gap-2 mt-4">
                   <Link 
-                    to={
-                      booking.package_id.startsWith("mock-") 
-                        ? (booking.package_id === "mock-bus" ? "/buses" 
-                         : booking.package_id === "mock-guide" ? "/guides"
-                         : `/${booking.package_id.split("-")[1]}s`) 
-                        : `/package/${booking.package_id}`
-                    } 
+                    to={(() => {
+                      const pid = booking.package_id;
+                      if (pid.startsWith("mock-dining-")) return "/restaurants";
+                      if (pid.startsWith("mock-guide-")) return `/guide/${pid.replace("mock-guide-", "")}`;
+                      if (pid.startsWith("mock-package-")) return `/package/${pid.replace("mock-package-", "")}`;
+                      if (pid.startsWith("mock-")) {
+                        if (pid.includes("bus")) return "/buses";
+                        if (pid.includes("train")) return "/trains";
+                        if (pid.includes("flight")) return "/flights";
+                        if (pid.includes("hotel")) return "/hotels";
+                        return "/";
+                      }
+                      return `/package/${pid}`;
+                    })()}
                     className="flex-1"
                   >
                     <Button variant="outline" size="sm" className="w-full">{t("myBookings.view", "View")}</Button>
                   </Link>
-                  {booking.status === "pending" && (
+                  {(booking.status === "pending" || booking.status === "confirmed") && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button

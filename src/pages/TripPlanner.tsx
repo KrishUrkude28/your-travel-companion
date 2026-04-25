@@ -18,7 +18,7 @@ import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 import BudgetTracker from "@/components/BudgetTracker";
 import { fetchDestinationWeather } from "@/utils/weatherPredictor";
 import { generateWhatsAppLink, exportToPDF, uploadTripItinerary } from "@/utils/itineraryExport";
-import PaymentModal from "@/components/PaymentModal";
+
 
 interface GeneratedDay {
   day: number;
@@ -72,7 +72,7 @@ const TripPlanner = () => {
     requirements: "",
   });
   const [prefsLoaded, setPrefsLoaded] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const planRef = useRef<HTMLDivElement>(null);
 
   // Prefill interests from saved travel preferences
@@ -462,7 +462,7 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
                   <button onClick={() => setShowBudget(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/10 text-accent border border-accent/30 text-sm font-semibold hover:bg-accent/20 transition-colors">
                     <PiggyBank className="h-4 w-4" /> Track Budget
                   </button>
-                  <button onClick={() => setShowPaymentModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors">
+                  <button onClick={() => navigate(`/payment/mock-package-${plan?.title?.toLowerCase().replace(/\s+/g, '-') || 'trip'}`, { state: { amount: parseInt(plan?.estimatedBudget?.replace(/[^0-9]/g, '') || '50000') || 50000, service: plan?.title || 'Custom Trip Itinerary' } })} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors">
                     <Navigation className="h-4 w-4" /> Book this Itinerary
                   </button>
                 </div>
@@ -563,15 +563,7 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
         )}
       </AnimatePresence>
 
-      {plan && (
-        <PaymentModal 
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          onSuccess={handlePaymentSuccess}
-          amount={parseInt(plan.estimatedBudget.replace(/[^0-9]/g, "")) || 50000}
-          title={plan.title}
-        />
-      )}
+
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun, Coins, ChevronDown, Languages, Utensils, Camera } from "lucide-react";
+import { Menu, X, MapPin, Sparkles, User, LogOut, BookOpen, Heart, UserCog, Moon, Sun, Coins, ChevronDown, Languages, Utensils, Camera, LayoutDashboard } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -167,6 +167,7 @@ const Navbar = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate("/profile")}><UserCog className="h-4 w-4 mr-2" /> Profile</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/my-bookings")}><BookOpen className="h-4 w-4 mr-2" /> My Bookings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/admin")}><LayoutDashboard className="h-4 w-4 mr-2 text-accent" /> Admin Dashboard</DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/saved-trips" className="w-full flex items-center cursor-pointer"><Sparkles className="mr-2 h-4 w-4" /><span>Saved AI Trips</span></Link>
                   </DropdownMenuItem>

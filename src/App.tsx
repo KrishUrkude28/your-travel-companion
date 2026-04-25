@@ -29,6 +29,7 @@ const Buses = lazy(() => import("./pages/Buses.tsx"));
 const SavedTrips = lazy(() => import("./pages/SavedTrips.tsx"));
 const Restaurants = lazy(() => import("./pages/Restaurants.tsx"));
 const Community = lazy(() => import("./pages/Community.tsx"));
+const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ const App = () => (
                 <Route path="/buses" element={<Buses />} />
                 <Route path="/restaurants" element={<Restaurants />} />
                 <Route path="/community" element={<Community />} />
+                <Route path="/admin" element={<AdminAnalytics />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

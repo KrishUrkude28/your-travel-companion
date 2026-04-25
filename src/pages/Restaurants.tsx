@@ -5,6 +5,7 @@ import { restaurants, Restaurant } from "@/data/restaurants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Restaurants = () => {
   const { toast } = useToast();
@@ -24,13 +25,14 @@ const Restaurants = () => {
     return matchesSearch && matchesCity && matchesCuisine;
   });
 
+  const navigate = useNavigate();
   const handleBookTable = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Table Reserved! 🍽️",
-      description: `Your reservation at ${bookingRes?.name} has been confirmed. A confirmation SMS has been sent to your registered number.`,
-    });
-    setBookingRes(null);
+    if (bookingRes) {
+      navigate(`/payment/mock-dining-${bookingRes.id}`, {
+        state: { amount: 500, service: `Table Reservation: ${bookingRes.name}` }
+      });
+    }
   };
 
   return (

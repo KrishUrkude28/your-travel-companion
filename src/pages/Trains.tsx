@@ -163,7 +163,7 @@ const Trains = () => {
                            {formatPrice(train.price)}
                         </div>
                         <p className="text-xs text-green-600 font-semibold mb-3">Available</p>
-                        <Link to={`/payment/train-${train.id}`} state={{ amount: train.price, service: `${train.name} (${train.id}) - Journey` }}>
+                        <Link to={`/payment/mock-train-${train.id}`} state={{ amount: train.price, service: `${train.name} (${train.id}) - Journey` }}>
                            <Button className="w-full bg-foreground text-background hover:bg-foreground/90 font-bold px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all">{t("common.select", "Select")}</Button>
                         </Link>
                     </div>

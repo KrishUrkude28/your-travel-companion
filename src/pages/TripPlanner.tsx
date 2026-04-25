@@ -206,7 +206,6 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
           ],
           temperature: 0.7,
           max_tokens: 4096,
-          response_format: { type: "json_object" }
         }),
       });
 
@@ -224,8 +223,13 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
       }
 
       const text = groqData.choices[0].message.content;
-      const cleanJsonText = text.replace(/```json|```/g, "").trim();
-      const generatedPlan = JSON.parse(cleanJsonText);
+      // Robustly extract JSON — strip markdown fences and find the first { ... } block
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("AI did not return a valid itinerary. Please try again.");
+      const generatedPlan = JSON.parse(jsonMatch[0]);
+      if (!generatedPlan.itinerary || !Array.isArray(generatedPlan.itinerary)) {
+        throw new Error("AI returned incomplete itinerary. Please try again.");
+      }
       setPlan(generatedPlan);
 
 

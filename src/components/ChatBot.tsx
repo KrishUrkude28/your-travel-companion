@@ -61,6 +61,12 @@ Keep answers concise (2-4 sentences max). Use friendly emojis occasionally. Focu
         }),
       });
 
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 401) throw new Error("Invalid API key");
+        if (res.status === 429) throw new Error("Rate limit reached, please wait a moment");
+        throw new Error(errData.error?.message || `Error ${res.status}`);
+      }
       const data = await res.json();
       const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response. Please try again!";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);

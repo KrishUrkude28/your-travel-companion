@@ -18,6 +18,7 @@ import DestinationAutocomplete from "@/components/DestinationAutocomplete";
 import BudgetTracker from "@/components/BudgetTracker";
 import { fetchDestinationWeather } from "@/utils/weatherPredictor";
 import { generateWhatsAppLink, exportToPDF, uploadTripItinerary } from "@/utils/itineraryExport";
+import { generateGroqCompletion } from "@/utils/aiClient";
 
 
 interface GeneratedDay {
@@ -141,11 +142,6 @@ const TripPlanner = () => {
     setPlan(null);
 
     try {
-      const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
-      if (!GROQ_KEY) {
-        throw new Error("Please add VITE_GROQ_API_KEY to your .env file!");
-      }
-
       const prompt = `System Identity: You are "TravelSathi AI," a specialized travel assistant for the Indian market. Your goal is to help both Indian citizens and foreigners explore India seamlessly.
 
 Core Competencies:
@@ -186,50 +182,47 @@ The content MUST be written in ${i18n.language === 'hi' ? 'Hindi' : 'English'}.
   "tips": ["Tip 1", "Tip 2", "Tip 3", "Tip 4"]
 }`;
 
-      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${GROQ_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "system",
-              content: "You are TravelSathi AI, an expert travel planner for India. Respond only in raw JSON."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 4096,
-        }),
+      const text = await generateGroqCompletion({
+        messages: [
+          {
+            role: "system",
+            content: "You are TravelSathi AI, an expert travel planner for India. Respond only in raw JSON.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 3500,
       });
 
-      if (!groqRes.ok) {
-        const errData = await groqRes.json().catch(() => ({}));
-        if (groqRes.status === 401) {
-          throw new Error("Invalid Groq API Key (401). Please check VITE_GROQ_API_KEY in your .env file.");
-        }
-        throw new Error(errData.error?.message || `Groq API Error: ${groqRes.statusText}`);
-      }
-
-      const groqData = await groqRes.json();
-      if (!groqData.choices || !groqData.choices[0]) {
-        throw new Error("Invalid response from Groq API.");
-      }
-
-      const text = groqData.choices[0].message.content;
       // Robustly extract JSON — strip markdown fences and find the first { ... } block
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("AI did not return a valid itinerary. Please try again.");
+      if (!jsonMatch) throw new Error("AI did not return a valid itinerary format. Please try again.");
       const generatedPlan = JSON.parse(jsonMatch[0]);
       if (!generatedPlan.itinerary || !Array.isArray(generatedPlan.itinerary)) {
         throw new Error("AI returned incomplete itinerary. Please try again.");
       }
+
+      // Sanitize fields to ensure strings for primitives and arrays for lists
+      if (typeof generatedPlan.estimatedBudget === "object" && generatedPlan.estimatedBudget !== null) {
+        generatedPlan.estimatedBudget = generatedPlan.estimatedBudget.total
+          ? `${generatedPlan.estimatedBudget.currency || "₹"} ${generatedPlan.estimatedBudget.total}`
+          : form.budget;
+      }
+      if (!generatedPlan.tips || !Array.isArray(generatedPlan.tips)) {
+        generatedPlan.tips = [];
+      }
+      generatedPlan.itinerary = generatedPlan.itinerary.map((day: any, idx: number) => ({
+        day: day.day || idx + 1,
+        title: String(day.title || `Day ${idx + 1}`),
+        description: String(day.description || ""),
+        meals: Array.isArray(day.meals) ? day.meals.map(String) : [String(day.meals || "")].filter(Boolean),
+        activities: Array.isArray(day.activities) ? day.activities.map(String) : [String(day.activities || "")].filter(Boolean),
+        accommodation: String(day.accommodation || ""),
+      }));
+
       setPlan(generatedPlan);
 
 

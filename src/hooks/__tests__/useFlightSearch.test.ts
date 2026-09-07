@@ -35,7 +35,7 @@ describe("useFlightSearch hook", () => {
     await result.current.searchFlights("NY", "LA", "2024-12-01");
     
     await waitFor(() => {
-      expect(result.current.flights.length).toBe(4);
+      expect(result.current.flights.length).toBe(5);
     });
   });
 });

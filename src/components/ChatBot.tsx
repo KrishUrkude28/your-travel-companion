@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { generateGroqCompletion } from "@/utils/aiClient";
+
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
-
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
 
 const SUGGESTED = [
   "Best time to visit Goa?",
@@ -34,44 +34,35 @@ const ChatBot = () => {
     const userMsg = text || input.trim();
     if (!userMsg || loading) return;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    const updatedHistory: Message[] = [...messages, { role: "user", content: userMsg }];
+    setMessages(updatedHistory);
     setLoading(true);
 
     try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${GROQ_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            {
-              role: "system",
-              content: `You are TravelSathi — a friendly, knowledgeable Indian travel assistant. 
+      const reply = await generateGroqCompletion({
+        messages: [
+          {
+            role: "system",
+            content: `You are TravelSathi — a friendly, knowledgeable Indian travel assistant. 
 Answer questions about travel destinations, budgets, visas, best seasons, food, transport, and tips.
 Keep answers concise (2-4 sentences max). Use friendly emojis occasionally. Focus on India and popular international destinations.`,
-            },
-            ...messages.map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: userMsg },
-          ],
-          temperature: 0.7,
-          max_tokens: 300,
-        }),
+          },
+          ...updatedHistory.map((m) => ({ role: m.role, content: m.content })),
+        ],
+        temperature: 0.7,
+        max_tokens: 400,
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        if (res.status === 401) throw new Error("Invalid API key");
-        if (res.status === 429) throw new Error("Rate limit reached, please wait a moment");
-        throw new Error(errData.error?.message || `Error ${res.status}`);
-      }
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response. Please try again!";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Connection issue 😔 Please check your internet and try again." }]);
+    } catch (err: any) {
+      console.error("ChatBot error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: err.message || "Connection issue 😔 Please check your connection or API key and try again.",
+        },
+      ]);
     } finally {
       setLoading(false);
     }
